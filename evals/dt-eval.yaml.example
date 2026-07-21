@@ -1,0 +1,40 @@
+# Config do dt-evals para este projeto — copie para dt-eval.yaml e preencha
+# o que estiver comentado. dt-eval.yaml (sem .example) fica no .gitignore,
+# nunca commitar token/apiKey reais.
+#
+# Referência completa de campos: https://github.com/dynatrace-oss/dt-evals
+
+schemaVersion: 2
+name: copilot-chat-boavista
+
+dynatrace:
+  environmentUrl: https://fov31014.live.dynatrace.com
+  # apiToken: gerado via `npx @dynatrace-oss/dt-evals doctor create-token`
+  # (não commitar — usar DT_API_TOKEN no .env local ou no secret do CI)
+
+judge:
+  # Escolha 1: openai | anthropic | azure-openai | gemini | vertex | bedrock
+  provider: openai
+  model: gpt-4.1
+  # apiKey: usar OPENAI_API_KEY (ou equivalente do provider escolhido) via .env
+  concurrency: 5
+
+scope:
+  # Filtra pelos spans do Copilot Chat que este projeto já captura
+  # (ver docs/01-arquitetura.md — service.name = copilot-chat)
+  service: copilot-chat
+  since: 2h
+  sampling:
+    strategy: random
+    percent: 20
+
+metrics:
+  enabled:
+    - relevance
+    - faithfulness
+    - user-frustration
+
+alerts:
+  thresholds:
+    relevance: 0.7
+    faithfulness: 0.7

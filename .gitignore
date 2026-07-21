@@ -3,6 +3,12 @@
 collector/.env
 !.env.example
 
+# dt-evals — config gerado localmente pode conter tenant/token, node_modules do CLI
+evals/dt-eval.yaml
+evals/node_modules/
+evals/package-lock.json
+~/.dt-eval/
+
 # macOS
 .DS_Store
 

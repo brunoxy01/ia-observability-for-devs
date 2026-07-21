@@ -25,24 +25,46 @@ flowchart LR
 `dt-evals` não fica no caminho do Copilot Chat: ele roda **fora**, sob demanda ou
 agendado, lendo spans recentes via DQL e escrevendo os scores como bizevents.
 
-## Setup
+## Setup (já pronto na pasta `evals/`)
 
+Este repo já traz o scaffold em [`evals/`](../evals) — não precisa instalar nada global.
 Requer Node.js ≥20 e um judge provider (OpenAI, Anthropic, Google, Bedrock ou Azure
-OpenAI) — usar o mesmo provider que a Boa Vista já aprovou é o caminho mais simples.
+OpenAI); qualquer um funciona, escolha o que a Boa Vista já aprovou internamente.
 
 ```bash
-npx @dynatrace-oss/dt-evals doctor      # cria/valida o platform token do Dynatrace
-npx @dynatrace-oss/dt-evals configure   # aponta pro tenant e pro judge provider
-npx @dynatrace-oss/dt-evals run --since 2h --sample 20
+cd evals
+npm install                        # instala @dynatrace-oss/dt-evals localmente
+cp dt-eval.yaml.example dt-eval.yaml   # ajuste provider/model/métricas se precisar
+cp .env.example .env                   # preencha DT_API_TOKEN + a API key do judge
+
+npm run doctor      # valida Node, credenciais e permissões (cria o token se faltar)
+npm run validate    # confere schema do dt-eval.yaml + conectividade
+npm run run:dry      # simula sem chamar o judge nem gravar nada — bom pro primeiro teste
+npm run run          # roda de verdade e grava os scores como bizevent no Dynatrace
 ```
+
+`dt-eval.yaml` e `.env` ficam **fora do git** (ver `.gitignore`) — cada colega usa o
+próprio token/API key, nunca commitar credencial real. `dt-eval.yaml.example` e
+`.env.example` são os templates versionados.
 
 O token do Dynatrace usado pelo `dt-evals` é **diferente** do `DT_INGEST_TOKEN` do
 collector (ver [06-troubleshooting.md](06-troubleshooting.md)): precisa de escopos de
-leitura de spans e leitura/escrita de bizevents — `dt-evals doctor create-token` já
-gera o token com o escopo certo.
+leitura de spans e leitura/escrita de bizevents — `npm run doctor` já orienta a criar
+o token com o escopo certo (`storage:spans:read`, `storage:events:read`,
+`storage:events:write`).
 
-Para rodar continuamente (em vez de manual), `dt-evals schedule add` ou `dt-evals
-deploy --provider aws|gcp|azure` — ver README do projeto para detalhes de deploy.
+Métricas já habilitadas no `dt-eval.yaml.example` (lista completa com
+`npx dt-evals evaluators list`, 14 built-ins disponíveis):
+
+| Métrica | O que mede |
+|---|---|
+| `relevance` | resposta responde o que foi perguntado |
+| `faithfulness` | resposta não inventa nada fora do contexto fornecido |
+| `user-frustration` | sinais de frustração do dev na conversa (score binário) |
+
+Para rodar continuamente em vez de manual: `npx dt-evals schedule add` ou `npx
+dt-evals deploy --provider aws|gcp|azure` (empacota como Lambda/Cloud Run/Function) —
+ver [README do dt-evals](https://github.com/dynatrace-oss/dt-evals) para detalhes.
 
 ## Schema do evento gravado no Dynatrace
 

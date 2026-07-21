@@ -1,0 +1,17 @@
+{
+  "name": "boa-vista-copilot-evals",
+  "private": true,
+  "version": "1.0.0",
+  "description": "dt-evals wired to the copilot-chat spans captured by this project",
+  "scripts": {
+    "doctor": "dt-evals doctor --config ./dt-eval.yaml",
+    "configure": "dt-evals configure --config ./dt-eval.yaml",
+    "validate": "dt-evals validate --config ./dt-eval.yaml",
+    "run": "dt-evals run --config ./dt-eval.yaml",
+    "run:dry": "dt-evals run --config ./dt-eval.yaml --dry-run",
+    "run:ci": "dt-evals run --config ./dt-eval.yaml --ci"
+  },
+  "devDependencies": {
+    "@dynatrace-oss/dt-evals": "latest"
+  }
+}

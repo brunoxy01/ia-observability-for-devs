@@ -5,6 +5,8 @@ fluindo para o **Dynatrace AI & LLM Observability**.
 
 **Tenant:** `https://fov31014.apps.dynatrace.com`
 
+> Repo público — colegas podem clonar, rodar e abrir PR. Ver [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## O que essa POC entrega
 
 Cobre os 4 pilares que o cliente solicitou:
@@ -59,6 +61,11 @@ boa-vista-ia-demo/
 │   └── managed-settings.example.json   Admin: coloca no .github-private ou MDM
 ├── dashboards/
 │   └── copilot-chat-observability.json  Dashboard Dynatrace pronto pra importar
+├── evals/                          dt-evals — LLM-as-judge sobre os spans do Copilot
+│   ├── package.json                 Scripts npm (doctor, configure, run, run:ci)
+│   ├── dt-eval.yaml.example         Config: métricas, judge provider, sampling
+│   └── .env.example                 Variáveis: DT_API_TOKEN, chave do judge provider
+├── CONTRIBUTING.md
 └── .gitignore
 ```
 
