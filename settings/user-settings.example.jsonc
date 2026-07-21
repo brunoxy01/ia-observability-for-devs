@@ -1,0 +1,52 @@
+// user-settings.example.jsonc
+//
+// Cole essas linhas no seu User Settings do VS Code (Cmd+Shift+P → "Preferences: Open User Settings (JSON)")
+//
+// Use este arquivo APENAS durante o piloto. Quando o rollout enterprise acontecer,
+// as managed policies vão sobrescrever automaticamente — nao precisa desfazer nada.
+//
+// Ver docs/03-dev-user-settings.md para detalhes.
+
+{
+  // ═══════════════════════════════════════════════════════════════════
+  // OpenTelemetry — habilita emissão de spans do Copilot Chat
+  // ═══════════════════════════════════════════════════════════════════
+
+  "github.copilot.chat.otel.enabled": true,
+
+  // Tipo de exporter: otlp-http (padrão) | otlp-grpc | console | file
+  "github.copilot.chat.otel.exporterType": "otlp-http",
+
+  // Endpoint do collector.
+  //   - Piloto local:  http://localhost:4318
+  //   - Piloto remoto: http://otel-collector.boavista.corp:4318
+  "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318",
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Captura de conteúdo — LER docs/04-lgpd-privacy.md ANTES DE MUDAR
+  // ═══════════════════════════════════════════════════════════════════
+  //
+  //   false = só metadados (modelo, tokens, latência). SEGURO. Recomendado.
+  //   true  = captura prompt, resposta, tool args e resultados.
+  //           REQUER APROVAÇÃO JURÍDICA da Boa Vista antes de habilitar.
+
+  "github.copilot.chat.otel.captureContent": false,
+
+  // Limite de tamanho por atributo em chars.
+  //   0    = sem limite (default)
+  //   8000 = ~2000 tokens — se captureContent=true, evita rejeições no backend
+  "github.copilot.chat.otel.maxAttributeSizeChars": 0
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Debug local — descomente APENAS em troubleshooting
+  // ═══════════════════════════════════════════════════════════════════
+  //
+  // Ver docs/06-troubleshooting.md
+  //
+  // "github.copilot.chat.otel.exporterType": "console",
+  //
+  // ou:
+  //
+  // "github.copilot.chat.otel.exporterType": "file",
+  // "github.copilot.chat.otel.outfile": "/tmp/copilot-otel.jsonl",
+}

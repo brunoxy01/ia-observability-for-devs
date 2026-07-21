@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Guia Completo de Implantação — Copilot Chat Observability · Boa Vista × Dynatrace</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    font-size: 10.5pt;
+  }
+  h1, h2, h3, h4, h5 { line-height: 1.3; page-break-after: avoid; }
+  h1 {
+    font-size: 24pt;
+    margin: 0 0 4px 0;
+    color: #1496ff;
+    border-bottom: 3px solid #1496ff;
+    padding-bottom: 8px;
+  }
+  .subtitle { color: #4a5b6b; font-size: 12pt; margin: 0 0 20px 0; }
+  h2 {
+    font-size: 17pt;
+    margin: 28px 0 12px 0;
+    padding: 10px 0 4px 0;
+    border-bottom: 2px solid #e8ecef;
+    color: #0f1e2d;
+  }
+  h2 .num {
+    display: inline-block;
+    background: #1496ff;
+    color: white;
+    min-width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14pt;
+    margin-right: 10px;
+    padding: 0 8px;
+    font-weight: 600;
+  }
+  h3 { font-size: 13pt; margin: 18px 0 6px 0; color: #7c3aed; }
+  h4 { font-size: 11pt; margin: 12px 0 4px 0; color: #0f1e2d; }
+  h5 { font-size: 10.5pt; margin: 8px 0 3px 0; font-weight: 600; color: #4a5b6b; }
+  p { margin: 5px 0 10px 0; }
+  code, pre { font-family: "JetBrains Mono", Menlo, Monaco, monospace; font-size: 9pt; }
+  code {
+    background: #f0f2f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #d63384;
+    word-break: break-all;
+  }
+  pre {
+    background: #1e2936;
+    color: #e6edf3;
+    padding: 12px 16px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.5;
+    white-space: pre;
+    page-break-inside: avoid;
+    font-size: 8.5pt;
+  }
+  pre code { background: none; color: inherit; padding: 0; word-break: normal; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 15px 0;
+    font-size: 9.5pt;
+  }
+  th { background: #1a2936; color: white; padding: 7px 10px; text-align: left; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e8ecef; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .callout {
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border-left: 4px solid;
+    font-size: 10pt;
+  }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .info { background: #eff6ff; border-color: #1496ff; }
+  .warn { background: #fefce8; border-color: #eab308; }
+  .success { background: #f0fdf4; border-color: #16a34a; }
+  .danger { background: #fef2f2; border-color: #dc2626; }
+  .arch {
+    background: #0f1e2d;
+    color: #b8d4ef;
+    padding: 16px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 8pt;
+    white-space: pre;
+    line-height: 1.35;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+  .kbd {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: monospace;
+    font-size: 9pt;
+  }
+  ul, ol { margin: 5px 0 10px 0; padding-left: 25px; }
+  li { margin: 3px 0; }
+  .figure {
+    margin: 15px 0 20px 0;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .figure img {
+    max-width: 100%;
+    border: 1px solid #d0d7de;
+    border-radius: 5px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .figure .caption {
+    font-size: 9pt;
+    color: #6a7b8b;
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .cover {
+    text-align: center;
+    padding: 60px 0;
+    page-break-after: always;
+  }
+  .cover h1 { border: none; font-size: 32pt; margin-bottom: 8px; color: #1496ff; }
+  .cover .subtitle { font-size: 16pt; margin: 12px 0 40px 0; }
+  .cover .meta-cover {
+    display: inline-block;
+    text-align: left;
+    background: #f6f8fa;
+    padding: 20px 30px;
+    border-radius: 8px;
+    border-left: 4px solid #1496ff;
+    margin-top: 40px;
+    font-size: 11pt;
+    line-height: 1.8;
+  }
+  .cover .meta-cover strong { display: inline-block; width: 130px; color: #0f1e2d; }
+  .toc {
+    background: #f6f8fa;
+    padding: 15px 25px;
+    border-radius: 5px;
+    margin: 15px 0 25px 0;
+  }
+  .toc h2 { border: none; margin: 0 0 8px 0; font-size: 13pt; }
+  .toc ol { columns: 2; column-gap: 40px; margin: 0; padding-left: 20px; }
+  .toc li { margin: 2px 0; break-inside: avoid; }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+  .card {
+    padding: 12px 15px;
+    background: #f6f8fa;
+    border-radius: 5px;
+    border-left: 3px solid #1496ff;
+  }
+  .card .card-title { font-weight: 600; color: #0f1e2d; font-size: 9.5pt; }
+  .card .card-value { font-size: 18pt; color: #1496ff; font-weight: 700; line-height: 1.1; margin: 5px 0; }
+  .card .card-desc { font-size: 8.5pt; color: #6a7b8b; }
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li { padding: 3px 0 3px 28px; position: relative; }
+  ul.checklist li:before {
+    content: "☐";
+    position: absolute;
+    left: 5px;
+    font-size: 12pt;
+    color: #1496ff;
+  }
+  .page-break { page-break-before: always; }
+  footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid #e8ecef;
+    color: #6a7b8b;
+    font-size: 9pt;
+    text-align: center;
+  }
+  @media print {
+    body { padding: 15mm 15mm; max-width: none; font-size: 9.5pt; }
+    h2 { page-break-before: auto; }
+    pre { font-size: 7.5pt; }
+    .cover { padding: 40mm 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═════════════════ COVER ═════════════════ -->
+<div class="cover">
+  <h1>Copilot Chat Observability</h1>
+  <p class="subtitle">Guia completo de implantação</p>
+  <div class="meta-cover">
+    <div><strong>Cliente:</strong> Equifax Boa Vista</div>
+    <div><strong>Solução:</strong> Dynatrace AI &amp; LLM Observability</div>
+    <div><strong>Escopo:</strong> GitHub Copilot Chat nas IDEs (VS Code + CLI)</div>
+    <div><strong>Tenant:</strong> https://fov31014.apps.dynatrace.com</div>
+    <div><strong>Data:</strong> 17 de julho de 2026</div>
+    <div><strong>Versão:</strong> 1.0</div>
+  </div>
+</div>
+
+<!-- ═════════════════ SUMÁRIO ═════════════════ -->
+<div class="toc">
+  <h2>📖 Sumário</h2>
+  <ol>
+    <li>Contexto e objetivo</li>
+    <li>Resultados comprovados na POC</li>
+    <li>Arquitetura da solução</li>
+    <li>Pré-requisitos</li>
+    <li>Passo 1 — Configurar o Dynatrace</li>
+    <li>Passo 2 — Subir o OTel Collector</li>
+    <li>Passo 3 — Configurar o GitHub Enterprise</li>
+    <li>Passo 4 — Piloto no VS Code</li>
+    <li>Passo 5 — Validar no Dynatrace</li>
+    <li>Passo 6 — Consumir os dados</li>
+    <li>Considerações de LGPD</li>
+    <li>Rollback e troubleshooting</li>
+    <li>Cronograma e responsabilidades</li>
+    <li>Referências oficiais</li>
+  </ol>
+</div>
+
+<!-- ═════════════════ 1. CONTEXTO ═════════════════ -->
+<h2><span class="num">1</span>Contexto e objetivo</h2>
+
+<p>
+A Boa Vista solicitou visibilidade em tempo real do consumo do GitHub Copilot pelos desenvolvedores, cobrindo <strong>quatro pilares</strong>:
+</p>
+
+<ol>
+  <li><strong>FinOps</strong> — tokens consumidos e custo estimado, com breakdown por usuário, time e sessão</li>
+  <li><strong>Performance (SRE)</strong> — latência das requisições aos modelos e identificação de gargalos</li>
+  <li><strong>Erros e limites</strong> — visibilidade sobre <em>rate limits</em> (HTTP 429) e falhas de comunicação</li>
+  <li><strong>Adoção</strong> — quais modelos estão sendo mais usados e por quais desenvolvedores</li>
+</ol>
+
+<p>
+Esta solução implanta um pipeline OpenTelemetry nativo que captura, em tempo real, todas as interações dos devs com o Copilot Chat no VS Code, envia para o Dynatrace, e disponibiliza os dados na app nativa <strong>AI &amp; LLM Observability</strong> — sem que nenhum dev precise fazer configuração manual.
+</p>
+
+<div class="callout info">
+  <strong>Por que agora é possível</strong>
+  A Microsoft/GitHub lançaram em <strong>julho de 2026</strong> o suporte OpenTelemetry nativo para o Copilot Chat no VS Code (<em>Monitor agent usage with OpenTelemetry</em>) e o <em>Enterprise managed-settings.json</em> em GA, permitindo enforcement centralizado. Isso viabiliza pela primeira vez a captura em tempo real do consumo do Copilot na IDE, com granularidade de <em>span</em> por chamada.
+</div>
+
+<!-- ═════════════════ 2. RESULTADOS ═════════════════ -->
+<h2><span class="num">2</span>Resultados comprovados na POC</h2>
+
+<p>
+Durante a construção desta POC, com <strong>apenas uma máquina</strong> (a do consultor Dynatrace) emitindo telemetria, capturamos os seguintes dados em 24 horas:
+</p>
+
+<div class="grid-3">
+  <div class="card">
+    <div class="card-title">Custo real capturado</div>
+    <div class="card-value">US$ 227,65</div>
+    <div class="card-desc">21 chamadas ao <code>claude-opus-4.7</code> em 24h — uma única máquina</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Chats + Tool calls</div>
+    <div class="card-value">41 + 28</div>
+    <div class="card-desc">Em 26 sessões distintas de Copilot Chat</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Agents descobertos</div>
+    <div class="card-value">7</div>
+    <div class="card-desc">Sub-agents que consomem tokens silenciosamente</div>
+  </div>
+</div>
+
+<div class="callout danger">
+  <strong>💥 Insight de FinOps</strong>
+  Uma única pessoa consumiu <strong>US$ 227,65</strong> em 24h com Copilot. Extrapolando para <strong>47 devs</strong> da Boa Vista com padrão similar de uso, o custo diário estimado é de <strong>~US$ 10.700</strong>, ou aproximadamente <strong>US$ 320 mil/mês</strong>. Sem observabilidade, esse número é invisível — vocês veem apenas a fatura agregada.
+</div>
+
+<h3>Custo total por modelo — dados reais capturados</h3>
+<div class="figure">
+  <img src="images/03-custo-por-modelo.png" alt="Custo por modelo">
+  <div class="caption">Cell 3 do notebook — <code>claude-opus-4.7</code> respondeu por US$ 227,65 em 21 chamadas; sub-agents em <code>gpt-4o-mini</code> serviram 21 tarefas auxiliares por menos de US$ 0,01.</div>
+</div>
+
+<h3>Volume nas últimas 24h</h3>
+<div class="figure">
+  <img src="images/02-volume-24h.png" alt="Volume 24h">
+  <div class="caption">41 chats principais + 28 execuções de tools distribuídas em 26 sessões distintas.</div>
+</div>
+
+<!-- ═════════════════ 3. ARQUITETURA ═════════════════ -->
+<h2 class="page-break"><span class="num">3</span>Arquitetura da solução</h2>
+
+<div class="arch">┌─────────────────────┐        ┌───────────────────────┐        ┌──────────────────────┐
+│  Máquina do dev     │        │   Rede corporativa    │        │      Dynatrace       │
+│                     │        │                       │        │                      │
+│  ┌─────────────┐    │        │  ┌─────────────────┐  │        │  ┌────────────────┐  │
+│  │   VS Code   │    │        │  │  OTel Collector │  │        │  │  Grail         │  │
+│  │ + Copilot   │─── OTLP ────┼──▶  otelcol-contrib│  │        │  │  (spans/       │  │
+│  │   Chat ext  │    │  HTTP  │  │                 │──┼── HTTPS─┼─▶│   metrics)     │  │
+│  └─────────────┘    │  :4318 │  └─────────────────┘  │  Api-  │  └────────────────┘  │
+│         ▲           │        │                       │  Token │           │          │
+│         │           │        └───────────────────────┘        │           ▼          │
+│         │                                                     │  ┌────────────────┐  │
+│         │ policy aplicada                                     │  │  AI & LLM      │  │
+│         │ automaticamente                                     │  │  Observability │  │
+│         │                                                     │  │      app       │  │
+│  ┌──────┴──────────────────────────────────────────┐          │  └────────────────┘  │
+│  │  GitHub Enterprise Cloud                        │          │                      │
+│  │  org "boavista" / .github-private repo          │          └──────────────────────┘
+│  │  copilot/managed-settings.json                  │
+│  └─────────────────────────────────────────────────┘</div>
+
+<h3>Componentes</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:22%">Componente</th><th style="width:38%">Papel</th><th style="width:20%">Onde roda</th><th style="width:20%">Responsável</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>VS Code + Copilot Chat</strong></td>
+      <td>Emite spans/metrics OTel de cada chat, tool call, sub-agent</td>
+      <td>Máquina de cada dev</td>
+      <td>GitHub Copilot (nativo, GA jul/2026)</td>
+    </tr>
+    <tr>
+      <td><strong>managed-settings.json</strong></td>
+      <td>Ativa e configura OTel em todos os VS Codes automaticamente</td>
+      <td>Repo <code>.github-private</code> no GHEC</td>
+      <td>Admin GitHub da Boa Vista</td>
+    </tr>
+    <tr>
+      <td><strong>OTel Collector</strong></td>
+      <td>Recebe telemetria dos devs, adiciona autenticação, forwarda</td>
+      <td>1 VM/container na rede da Boa Vista</td>
+      <td>Plataforma / SRE da Boa Vista</td>
+    </tr>
+    <tr>
+      <td><strong>Dynatrace AI Observability</strong></td>
+      <td>Armazena no Grail, detecta automaticamente serviços LLM</td>
+      <td>SaaS — tenant <code>fov31014</code></td>
+      <td>Admin Dynatrace da Boa Vista</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Fluxo de dados</h3>
+<ol>
+  <li>Dev abre o VS Code — extensão Copilot Chat detecta <code>github.copilot.chat.otel.enabled=true</code> via managed policy</li>
+  <li>Dev faz uma pergunta ao Copilot Chat — extensão gera árvore de spans (<code>invoke_agent</code> → N × <code>chat</code> → N × <code>execute_tool</code>)</li>
+  <li>Spans são enviados via OTLP HTTP para o OTel Collector interno na rede corporativa</li>
+  <li>Collector adiciona o header <code>Authorization: Api-Token dt0c01.xxx</code> e forwarda via HTTPS para o Dynatrace</li>
+  <li>Grail armazena; app AI &amp; LLM Observability detecta automaticamente o serviço <code>copilot-chat</code></li>
+  <li>Dashboards, notebook e DQL passam a consultar os dados</li>
+</ol>
+
+<!-- ═════════════════ 4. PRÉ-REQUISITOS ═════════════════ -->
+<h2><span class="num">4</span>Pré-requisitos</h2>
+
+<h3>4.1 Contratos e planos</h3>
+<table>
+  <thead><tr><th>Item</th><th>Requisito</th></tr></thead>
+  <tbody>
+    <tr><td>GitHub Copilot</td><td><strong>Copilot Business</strong> ($19/dev/mês) ou <strong>Copilot Enterprise</strong> ($39/dev/mês). Plano Individual não suporta managed settings.</td></tr>
+    <tr><td>GitHub Enterprise Cloud (GHEC)</td><td>Necessário para publicar o <code>managed-settings.json</code> via server-managed. Alternativa: file-based via MDM ou Ansible.</td></tr>
+    <tr><td>Dynatrace</td><td>Tenant com <strong>AI &amp; LLM Observability</strong> habilitado (padrão em SaaS moderno). Tenant atual: <code>fov31014</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>4.2 Infraestrutura</h3>
+<table>
+  <thead><tr><th>Item</th><th>Requisito</th></tr></thead>
+  <tbody>
+    <tr><td>Host do collector</td><td>VM Linux (Ubuntu 22.04, RHEL 9, Amazon Linux 2023) ou pod Kubernetes<br>Recursos: 2 vCPU / 2 GB RAM / 10 GB disco</td></tr>
+    <tr><td>Runtime</td><td>Docker, Podman ou containerd</td></tr>
+    <tr><td>Firewall — ingresso</td><td>Porta <code>4318/tcp</code> acessível pelas máquinas dos devs (rede interna, VPN, Zscaler, etc.)</td></tr>
+    <tr><td>Firewall — egresso</td><td>Do collector para <code>*.live.dynatrace.com:443</code> (HTTPS)</td></tr>
+    <tr><td>DNS interno</td><td>Registro apontando para o host, ex.: <code>otel-collector.boavista.corp</code></td></tr>
+  </tbody>
+</table>
+
+<h3>4.3 Software nos devs</h3>
+<table>
+  <thead><tr><th>Item</th><th>Requisito</th></tr></thead>
+  <tbody>
+    <tr><td>VS Code</td><td><strong>Versão 1.128 ou superior</strong> (precedência de managed policies)</td></tr>
+    <tr><td>Extensão</td><td><strong>GitHub Copilot Chat</strong> atualizada (autoatualização normalmente ativa)</td></tr>
+    <tr><td>Conta GitHub</td><td>Logada em conta membro de uma org GHEC da Boa Vista com licença Copilot Business/Enterprise</td></tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════ 5. DYNATRACE ═════════════════ -->
+<h2 class="page-break"><span class="num">5</span>Passo 1 — Configurar o Dynatrace</h2>
+
+<p><strong>Responsável:</strong> Admin do tenant Dynatrace &nbsp;·&nbsp; <strong>Tempo estimado:</strong> 15 minutos</p>
+
+<h3>5.1 Criar API Token classic para OTLP ingest</h3>
+<ol>
+  <li>Acesse o tenant: <code>https://fov31014.apps.dynatrace.com</code></li>
+  <li><span class="kbd">Ctrl+K</span> → digite <strong>Access Tokens</strong> → <strong>Generate new token</strong></li>
+  <li>Nome sugerido: <code>copilot-otlp-ingest</code></li>
+  <li>Selecionar os scopes:
+    <ul>
+      <li><code>openTelemetryTrace.ingest</code> — para receber spans</li>
+      <li><code>metrics.ingest</code> — para receber metrics</li>
+    </ul>
+  </li>
+  <li><strong>Generate</strong> — o token começa com <code>dt0c01.</code> (~96 caracteres)</li>
+  <li>Salvar no cofre corporativo (1Password, HashiCorp Vault, AWS Secrets Manager, etc.)</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Segurança</strong>
+  Este token nunca é distribuído para máquinas de devs — fica apenas no OTel Collector. Isso permite rotação sem redeploy nos devs e reduz drasticamente a superfície de exposição.
+</div>
+
+<h3>5.2 (Opcional) Preparar dashboard e notebook</h3>
+<p>Os assets prontos desta POC estão em:</p>
+<ul>
+  <li><code>dashboards/copilot-chat-observability.json</code> — importar via <span class="kbd">Ctrl+K</span> → Dashboards → <strong>+ Dashboard</strong> → <strong>Upload</strong></li>
+  <li>Notebook v2 já criado no tenant: <a href="https://fov31014.apps.dynatrace.com/ui/apps/dynatrace.notebooks/notebook/dcceeff0-befc-487d-8a04-b22ceb61d442">abrir aqui</a></li>
+</ul>
+
+<!-- ═════════════════ 6. COLLECTOR ═════════════════ -->
+<h2><span class="num">6</span>Passo 2 — Subir o OTel Collector</h2>
+
+<p><strong>Responsável:</strong> Plataforma / SRE da Boa Vista &nbsp;·&nbsp; <strong>Tempo estimado:</strong> 1 dia útil (inclui provisionamento e liberação de firewall)</p>
+
+<h3>6.1 Arquivo <code>compose.yml</code></h3>
+<pre><code>services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: bv-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    env_file: .env
+    ports:
+      - "4318:4318"     # OTLP HTTP (VS Code envia aqui)
+      - "4317:4317"     # OTLP gRPC (alternativa)
+      - "13133:13133"   # Health check
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133"]
+      interval: 30s</code></pre>
+
+<h3>6.2 Arquivo <code>otel-collector-config.yaml</code></h3>
+<pre><code>receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        max_request_body_size: 4194304
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: upsert
+
+exporters:
+  otlphttp/dynatrace:
+    endpoint: ${env:DT_OTLP_ENDPOINT}
+    headers:
+      Authorization: "Api-Token ${env:DT_INGEST_TOKEN}"
+    compression: gzip
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace]</code></pre>
+
+<h3>6.3 Arquivo <code>.env</code></h3>
+<pre><code># Endpoint OTLP do Dynatrace — nota: live.dynatrace.com (não apps)
+DT_OTLP_ENDPOINT=https://fov31014.live.dynatrace.com/api/v2/otlp
+
+# Token gerado no Passo 1
+DT_INGEST_TOKEN=dt0c01.XXXXXXXXXXXXXXXXXXXXXXXX...</code></pre>
+
+<h3>6.4 Subir o collector</h3>
+<pre><code>docker compose up -d
+docker logs -f bv-otel-collector</code></pre>
+
+<h3>6.5 Validar</h3>
+
+<h5>Health check</h5>
+<pre><code>curl http://otel-collector.boavista.corp:13133/
+# Deve retornar HTTP 200</code></pre>
+
+<h5>Teste de span sintético (end-to-end)</h5>
+<pre><code>curl -X POST http://otel-collector.boavista.corp:4318/v1/traces \
+  -H "Content-Type: application/json" \
+  -d '{"resourceSpans":[{"scopeSpans":[{"spans":[{
+    "traceId":"00112233445566778899aabbccddeeff",
+    "spanId":"0011223344556677","name":"test-span",
+    "startTimeUnixNano":"1721242400000000000",
+    "endTimeUnixNano":"1721242401000000000"}]}]}]}'
+# HTTP 200 = OK. Aguardar 15s e validar no Dynatrace:
+# fetch spans | filter span.name == "test-span" | limit 5</code></pre>
+
+<!-- ═════════════════ 7. GITHUB ═════════════════ -->
+<h2 class="page-break"><span class="num">7</span>Passo 3 — Configurar o GitHub Enterprise</h2>
+
+<p><strong>Responsável:</strong> Admin do GitHub Copilot Enterprise da Boa Vista &nbsp;·&nbsp; <strong>Tempo estimado:</strong> 1 dia útil</p>
+
+<h3>7.1 Selecionar a organização hospedeira</h3>
+<ol>
+  <li>Login no GitHub Enterprise Settings</li>
+  <li>Ir em <strong>AI Controls</strong> → <strong>Agents</strong></li>
+  <li>Selecionar a organização que hospedará o <code>.github-private</code> (geralmente a org corporativa central)</li>
+</ol>
+
+<h3>7.2 Criar o repositório <code>.github-private</code></h3>
+<p>Se ainda não existir, criar um repositório <strong>privado</strong> com esse nome exato na organização selecionada. É onde ficam configurações que se aplicam a toda a org sem serem visíveis publicamente.</p>
+
+<h3>7.3 Publicar o arquivo <code>copilot/managed-settings.json</code></h3>
+<p>Path exato no repositório: <code>copilot/managed-settings.json</code>, no branch default (<code>main</code>).</p>
+
+<pre><code>{
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "https://otel-collector.boavista.corp:4318",
+    "protocol": "otlp-http",
+
+    "captureContent": false,
+    "lockCaptureContent": true,
+
+    "serviceName": "copilot-chat-boavista",
+    "resourceAttributes": {
+      "deployment.environment": "production",
+      "organization": "boavista",
+      "cost_center": "engineering"
+    }
+  }
+}</code></pre>
+
+<h3>7.4 Referência de campos</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Valor sugerido</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><code>enabled</code></td><td><code>true</code></td><td>Liga a exportação OTel do Copilot Chat em todos os VS Codes</td></tr>
+    <tr><td><code>endpoint</code></td><td>URL do collector interno</td><td>Onde os spans são enviados. HTTPS recomendado.</td></tr>
+    <tr><td><code>protocol</code></td><td><code>otlp-http</code></td><td>HTTP é o padrão. <code>otlp-grpc</code> também suportado.</td></tr>
+    <tr><td><code>captureContent</code></td><td><code>false</code></td><td>Não captura texto de prompt/resposta. LGPD-safe. Ver Seção 11.</td></tr>
+    <tr><td><code>lockCaptureContent</code></td><td><code>true</code></td><td>Impede que devs sobrescrevam <code>captureContent</code> individualmente</td></tr>
+    <tr><td><code>serviceName</code></td><td><code>copilot-chat-boavista</code></td><td>Nome do serviço no Dynatrace</td></tr>
+    <tr><td><code>resourceAttributes</code></td><td>ver exemplo</td><td>Atributos aplicados a todos os spans (ambiente, org, cost center)</td></tr>
+  </tbody>
+</table>
+
+<h3>7.5 Propagação</h3>
+<div class="callout info">
+  <strong>Tempo de propagação: até 1h</strong>
+  O VS Code faz pull das managed settings a cada 1h e ao fazer login. Depois de commitar o arquivo, os devs recebem a configuração sem fazer nada. Para forçar antes disso, o dev pode simplesmente reiniciar o VS Code.
+</div>
+
+<h3>7.6 Canais alternativos de delivery</h3>
+<p>Se a Boa Vista não usa GHEC ou prefere não expor o repositório <code>.github-private</code>, há dois canais alternativos:</p>
+
+<table>
+  <thead><tr><th>Canal</th><th>Como</th><th>Quando usar</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>File-based</td>
+      <td>Colocar <code>managed-settings.json</code> em<br>Linux: <code>/etc/github-copilot/</code><br>macOS: <code>/Library/Application Support/GitHubCopilot/</code><br>Windows: <code>%ProgramFiles%\GitHubCopilot\</code></td>
+      <td>Deploy via Ansible/Chef/Puppet/SCCM</td>
+    </tr>
+    <tr>
+      <td>Native MDM</td>
+      <td>Windows Registry: <code>HKLM\SOFTWARE\Policies\GitHubCopilot</code><br>macOS: preference domain <code>com.github.copilot</code></td>
+      <td>Frotas gerenciadas por Intune, Jamf, GPO</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════ 8. VS CODE ═════════════════ -->
+<h2><span class="num">8</span>Passo 4 — Piloto no VS Code (opcional, para 3-5 devs voluntários antes do rollout enterprise)</h2>
+
+<p><strong>Responsável:</strong> Dev voluntário &nbsp;·&nbsp; <strong>Tempo estimado:</strong> 5 minutos por dev</p>
+
+<div class="callout info">
+  <strong>Por que fazer piloto?</strong>
+  Enquanto o time de GitHub Admin prepara e publica o <code>managed-settings.json</code>, você pode validar a arquitetura com 3-5 devs configurando manualmente no user settings deles. Quando o rollout enterprise acontecer, o managed-settings sobrescreve automaticamente sem que os devs precisem desfazer nada.
+</div>
+
+<h3>8.1 Configurar o user settings do VS Code</h3>
+<ol>
+  <li><span class="kbd">Cmd/Ctrl+Shift+P</span> → digite <strong>Preferences: Open User Settings (JSON)</strong></li>
+  <li>Adicionar as 5 linhas de OTel dentro das chaves <code>{}</code>:</li>
+</ol>
+
+<pre><code>{
+  // ...suas outras settings...
+
+  "github.copilot.chat.otel.enabled": true,
+  "github.copilot.chat.otel.exporterType": "otlp-http",
+  "github.copilot.chat.otel.otlpEndpoint": "http://otel-collector.boavista.corp:4318",
+  "github.copilot.chat.otel.captureContent": false,
+  "github.copilot.chat.otel.maxAttributeSizeChars": 0
+}</code></pre>
+
+<h3>8.2 Reload do VS Code</h3>
+<p><span class="kbd">Cmd/Ctrl+Shift+P</span> → <strong>Developer: Reload Window</strong></p>
+
+<h3>8.3 (Opcional) Enriquecer com identidade do dev</h3>
+<p>Para popular <code>user.email</code>, <code>user.team</code>, <code>cost_center</code> em cada span, adicionar variável de ambiente no shell:</p>
+
+<h5>Fish shell</h5>
+<pre><code>set -Ux OTEL_RESOURCE_ATTRIBUTES \
+  "user.email=nome.sobrenome@boavista.com.br,user.name=Nome Sobrenome,user.team=plataforma-api,cost_center=engineering"</code></pre>
+
+<h5>Bash / Zsh</h5>
+<pre><code>echo 'export OTEL_RESOURCE_ATTRIBUTES="user.email=nome.sobrenome@boavista.com.br,user.team=plataforma-api"' >> ~/.zshrc</code></pre>
+
+<div class="callout warn">
+  <strong>Herança da variável no VS Code</strong>
+  No macOS, se o dev abrir o VS Code pelo ícone do dock (Finder), a variável de ambiente do shell NÃO é herdada. Precisa fechar completamente (<span class="kbd">Cmd+Q</span>) e reabrir pelo terminal com <code>code /caminho/do/workspace</code>. Windows/Linux herdam normalmente.
+</div>
+
+<h3>8.4 No rollout enterprise (via managed-settings.json)</h3>
+<p>Nada. Os devs não fazem absolutamente nada. Ao próximo login/reinício do VS Code, a policy é aplicada automaticamente e sobrescreve qualquer user setting anterior. Se o time de Plataforma distribuir também a variável <code>OTEL_RESOURCE_ATTRIBUTES</code> via Intune/Jamf/GPO, nem mesmo isso os devs precisam configurar.</p>
+
+<!-- ═════════════════ 9. VALIDAR ═════════════════ -->
+<h2 class="page-break"><span class="num">9</span>Passo 5 — Validar no Dynatrace</h2>
+
+<p>Depois de configurar collector + policy + fazer 2-3 interações reais com Copilot Chat, aguardar ~15 segundos e validar:</p>
+
+<h3>9.1 Sanity check via DQL</h3>
+<p>Abrir o notebook do tenant e rodar:</p>
+
+<pre><code>fetch spans, from:now()-1h
+| filter service.name == "copilot-chat"
+| summarize spans = count(),
+            devs  = countDistinct(user.email),
+            by:{service.name, gen_ai.agent.name}
+| sort spans desc</code></pre>
+
+<p><strong>Retorno esperado</strong> — múltiplos agents do Copilot Chat com spans capturados:</p>
+<div class="figure">
+  <img src="images/01-sanity-check.png" alt="Sanity check">
+  <div class="caption">Sanity check funcionando — 7 tipos de agent/sub-agent capturados na última 1h.</div>
+</div>
+
+<h3>9.2 Verificar policy no VS Code do dev</h3>
+<p>Do lado do dev: <span class="kbd">Cmd/Ctrl+Shift+P</span> → <strong>Developer: Policy Diagnostics</strong>. Deve aparecer uma seção mostrando os campos de <code>telemetry.*</code> como policy-enforced.</p>
+
+<h3>9.3 Debugar com exporter console (se algo não funcionar)</h3>
+<p>Trocar temporariamente no user settings do dev:</p>
+<pre><code>"github.copilot.chat.otel.exporterType": "console"</code></pre>
+<p>Os spans passam a aparecer no <strong>Output panel</strong> do VS Code (canal <em>GitHub Copilot Chat</em>). Se aparecem aqui mas não chegam no Dynatrace, o problema é no envio HTTP.</p>
+
+<!-- ═════════════════ 10. CONSUMIR ═════════════════ -->
+<h2><span class="num">10</span>Passo 6 — Consumir os dados</h2>
+
+<p>Depois que os dados estão fluindo, três formas de consumir:</p>
+
+<h3>10.1 App AI &amp; LLM Observability (nativa)</h3>
+<p>A app da Dynatrace detecta automaticamente serviços LLM. Ao abrir a app AI Observability, o serviço <code>copilot-chat</code> aparece com métricas de LLM requests, tokens, latência e (se habilitado) prompts.</p>
+
+<h4>10.1.1 Aba Prompts — cada interação em detalhe</h4>
+<div class="figure">
+  <img src="images/12-prompts-view-app.png" alt="Prompts view">
+  <div class="caption">Stream de prompts filtrado por provider=github, modelos claude-opus-4.7 e gpt-4o-mini. Cada linha é uma interação real com input do dev, modelo escolhido e output gerado.</div>
+</div>
+
+<h4>10.1.2 Aba Agents Topology — grafo automático</h4>
+<div class="figure">
+  <img src="images/09-agents-topology.png" alt="Agents topology">
+  <div class="caption">Topologia automática construída pelo Dynatrace: 6 agents identificados (backgroundTodoAgent, copilotLanguageModelWrapper, progressMessages, GitHub Copilot Chat, panel/editAgent, copilot), 3 modelos LLM (gpt-4o-mini, claude-opus-4.7, gpt-4o), 1 provider (github), 1 AI service (copilot-chat).</div>
+</div>
+
+<h4>10.1.3 Trace distribuído — árvore de spans de uma sessão</h4>
+<div class="figure">
+  <img src="images/13-conversation-detail.png" alt="Conversation detail">
+  <div class="caption">Detalhe de uma conversation completa: 6.31min de duração total, 5.061.144 tokens usados, prompt de input e resposta do assistant visíveis lado a lado. Cada chat individual aparece na Agentic Trace com sua duração.</div>
+</div>
+
+<div class="figure">
+  <img src="images/10-distributed-trace.png" alt="Distributed trace">
+  <div class="caption">Árvore hierárquica de spans OTel: 1 <code>invoke_agent</code> root → múltiplos <code>chat claude-opus-4.7</code> → múltiplos <code>execute_tool</code> (manage_todo_list, mcp_dynatrace_mcp_verify_dql, create_file, run_in_terminal, memory). Timeline permite ver onde tempo é gasto.</div>
+</div>
+
+<h3>10.2 Dashboard custom (fornecido pela POC)</h3>
+<p>Importar <code>dashboards/copilot-chat-observability.json</code> via <span class="kbd">Ctrl+K</span> → Dashboards → <strong>+ Dashboard</strong> → <strong>Upload</strong>. Widgets prontos de FinOps, SRE e Adoção.</p>
+
+<h3>10.3 Notebook custom — todas as queries prontas</h3>
+<p>URL do notebook criado programaticamente durante a POC:</p>
+<p><code style="font-size:8pt;">https://fov31014.apps.dynatrace.com/ui/apps/dynatrace.notebooks/notebook/dcceeff0-befc-487d-8a04-b22ceb61d442</code></p>
+
+<h4>Queries mais impactantes</h4>
+
+<h5>Custo por dev (top 20)</h5>
+<div class="figure">
+  <img src="images/04-custo-por-dev.png" alt="Custo por dev">
+  <div class="caption">Cell 4 — breakdown por dev com email, team, custo em USD e chats. Popula automaticamente para os 47 devs após o rollout.</div>
+</div>
+
+<h5>Custo por time</h5>
+<div class="figure">
+  <img src="images/05-custo-por-time.png" alt="Custo por time">
+  <div class="caption">Cell 5 — agregado por squad/time. Base do rateio de custo por área.</div>
+</div>
+
+<h5>Latência por modelo</h5>
+<div class="figure">
+  <img src="images/06-latencia-modelo.png" alt="Latência">
+  <div class="caption">Cell 6 — P50/P95/P99 por modelo. Base para SLOs internos de Copilot.</div>
+</div>
+
+<h5>Modelos mais usados</h5>
+<div class="figure">
+  <img src="images/07-modelos-adocao.png" alt="Modelos mais usados">
+  <div class="caption">Cell 9 — <code>gpt-4o-mini</code> serve 23 chamadas auxiliares por US$&lt;0.01, enquanto <code>claude-opus-4.7</code> serve 20 chamadas premium consumindo 8.8M tokens. Insight direto de otimização.</div>
+</div>
+
+<h5>Ferramentas mais invocadas</h5>
+<div class="figure">
+  <img src="images/08-ferramentas-tools.png" alt="Tools mais usadas">
+  <div class="caption">Cell 10 — tools do Copilot Agent (manage_todo_list, mcp_dynatrace_mcp_execute_dql, run_in_terminal, create_file, etc.) rankeadas por invocação. Útil para entender padrões de uso avançado do Agent Mode.</div>
+</div>
+
+<h5>Agents e sub-agents descobertos</h5>
+<div class="figure">
+  <img src="images/11-agents-subagents.png" alt="Agents ativos">
+  <div class="caption">Cell 11 — <code>panel/editAgent</code> (modo Agent) consumiu 9.7M tokens em 22 chamadas; <code>GitHub Copilot Chat</code> foreground consumiu 6.5M tokens em 2 chamadas; sub-agents auxiliares (<code>copilotLanguageModelWrapper</code>, <code>progressMessages</code>, <code>backgroundTodoAgent</code>) consumiram &lt;40K tokens combinados. Revela onde o custo real está.</div>
+</div>
+
+<h5>Top 10 devs por consumo</h5>
+<div class="figure">
+  <img src="images/14-top-devs.png" alt="Top devs">
+  <div class="caption">Cell 12 — ranking de devs por chats, tokens e sessions. Popula com todos os 47 devs após o rollout enterprise. Base para conversas de coaching e otimização por dev.</div>
+</div>
+
+<!-- ═════════════════ 11. LGPD ═════════════════ -->
+<h2 class="page-break"><span class="num">11</span>Considerações de LGPD</h2>
+
+<h3>11.1 Modo padrão — captureContent = false</h3>
+<div class="callout success">
+  <strong>LGPD-safe</strong>
+  Apenas <strong>metadados</strong> são capturados: modelo usado, contagens de token, latência, nomes de ferramentas invocadas, IDs (session, conversation, trace, span), metadados git (branch, commit, repo).
+  <br><br>
+  <strong>Não</strong> é capturado: texto de prompts, respostas do modelo, código-fonte, conteúdo de arquivos abertos, comandos de terminal.
+  <br><br>
+  Risco de PII: <strong>zero</strong>. Não requer aprovação do DPO.
+</div>
+
+<h3>11.2 Modo com conteúdo — captureContent = true</h3>
+<div class="callout danger">
+  <strong>Trilha formal de aprovação necessária</strong>
+  Ativar <code>captureContent=true</code> captura texto integral de prompts, respostas, argumentos de ferramentas (inclui caminhos de arquivos e código-fonte lido) e comandos de terminal.
+  <br><br>
+  Antes de habilitar em produção:
+  <ul style="margin: 4px 0 0 18px; padding: 0;">
+    <li>Aprovação do DPO da Boa Vista</li>
+    <li>Revisão pelo jurídico trabalhista</li>
+    <li>Comunicação transparente aos devs (aviso interno)</li>
+    <li>Habilitar redação de PII no OTel Collector (CPF, email, tokens, senhas)</li>
+    <li>Definir política de retenção no Grail (default 35d)</li>
+  </ul>
+</div>
+
+<h3>11.3 Recomendação</h3>
+<p>Iniciar a POC e o rollout enterprise com <code>captureContent=false</code>. Cobre 100% dos requisitos formais de FinOps + SRE. A opção de captura de conteúdo pode ser habilitada depois, em subset de devs, se surgir demanda específica de análise de qualidade de prompts, após completar a trilha de aprovação.</p>
+
+<!-- ═════════════════ 12. ROLLBACK ═════════════════ -->
+<h2><span class="num">12</span>Rollback e troubleshooting</h2>
+
+<h3>12.1 Rollback rápido</h3>
+<table>
+  <thead><tr><th>Canal</th><th>Como desligar</th><th>Tempo</th></tr></thead>
+  <tbody>
+    <tr><td>Server-managed</td><td>Comitar <code>{"telemetry":{"enabled":false}}</code> no <code>.github-private/copilot/managed-settings.json</code></td><td>Propaga em até 1h</td></tr>
+    <tr><td>File-based</td><td>Remover o arquivo via Ansible/Chef</td><td>Próximo reload do VS Code</td></tr>
+    <tr><td>Native MDM</td><td>Remover a policy da MDM (Intune/Jamf)</td><td>Próximo policy refresh</td></tr>
+    <tr><td>Emergencial (todos)</td><td>Parar o OTel Collector — os spans do VS Code começam a dar timeout silenciosamente e são descartados. Nenhum dev vê erro.</td><td>Instantâneo</td></tr>
+  </tbody>
+</table>
+
+<h3>12.2 Troubleshooting comum</h3>
+
+<h4>VS Code não emite nada</h4>
+<ol>
+  <li>Verificar policy: <span class="kbd">Cmd/Ctrl+Shift+P</span> → <strong>Developer: Policy Diagnostics</strong> — deve mostrar <code>telemetry.enabled = true</code></li>
+  <li>Trocar temporariamente <code>exporterType</code> para <code>"console"</code> e ver spans no Output panel</li>
+  <li>Verificar conectividade: <code>curl -v http://otel-collector.boavista.corp:4318/v1/traces -H "Content-Type: application/json" -d "{}"</code></li>
+  <li>Aumentar log level: setar env <code>COPILOT_OTEL_LOG_LEVEL=debug</code></li>
+</ol>
+
+<h4>Collector recebe, Dynatrace não mostra</h4>
+<ul>
+  <li>Ver logs: <code>docker logs -f bv-otel-collector</code> — procurar HTTP 401 (token inválido), 403 (scope faltando)</li>
+  <li>Verificar endpoint: deve ser <code>*.live.dynatrace.com</code>, <strong>não</strong> <code>*.apps.dynatrace.com</code></li>
+  <li>Confirmar scopes do token: <code>openTelemetryTrace.ingest</code> + <code>metrics.ingest</code></li>
+</ul>
+
+<h4>Atributos <code>user.email</code>/<code>user.team</code> vazios</h4>
+<p><code>OTEL_RESOURCE_ATTRIBUTES</code> não foi configurado ou o VS Code não herdou a variável do shell (ver Seção 8.3). Alternativa mais robusta: adicionar processor de enrichment no OTel Collector que faz lookup do email do dev contra um CSV/AD/LDAP.</p>
+
+<!-- ═════════════════ 13. CRONOGRAMA ═════════════════ -->
+<h2><span class="num">13</span>Cronograma e responsabilidades</h2>
+
+<table>
+  <thead><tr><th>Semana</th><th>Atividade</th><th>Responsável</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Kickoff técnico + criação de tokens Dynatrace + provisionamento do host do collector</td><td>Consultor Dynatrace + SRE Boa Vista + Admin Dynatrace</td></tr>
+    <tr><td>1</td><td>Deploy do collector e validação com 3 devs piloto (configuração manual)</td><td>SRE + 3 devs voluntários</td></tr>
+    <tr><td>2</td><td>Ajustes de coleta + validação dos dashboards + preparação do <code>managed-settings.json</code></td><td>Consultor + Admin GitHub</td></tr>
+    <tr><td>2</td><td>Publicação no <code>.github-private</code> + rollout para todos os 47 devs</td><td>Admin GitHub</td></tr>
+    <tr><td>3</td><td>Coleta de dados de linha de base + criação de alertas críticos</td><td>Consultor + SRE</td></tr>
+    <tr><td>4</td><td>Apresentação executiva dos resultados (custo real, adoção, ROI)</td><td>Todos</td></tr>
+  </tbody>
+</table>
+
+<h3>Checklist consolidado por responsável</h3>
+
+<h4>Time de Plataforma / SRE</h4>
+<ul class="checklist">
+  <li>Provisionar 1 host (VM ou pod K8s) com 2 vCPU / 2 GB RAM</li>
+  <li>Abrir firewall — ingresso 4318/tcp e egresso *.live.dynatrace.com:443</li>
+  <li>Criar registro DNS interno para o collector</li>
+  <li>Subir o OTel Collector com os arquivos fornecidos</li>
+  <li>(Opcional) Habilitar TLS/mTLS no receiver</li>
+  <li>(Opcional) Distribuir <code>OTEL_RESOURCE_ATTRIBUTES</code> via Intune/Jamf/GPO</li>
+</ul>
+
+<h4>Admin Dynatrace</h4>
+<ul class="checklist">
+  <li>Gerar API Token classic com scopes <code>openTelemetryTrace.ingest</code> + <code>metrics.ingest</code></li>
+  <li>Entregar token ao time de Plataforma via cofre corporativo</li>
+  <li>Importar o dashboard <code>copilot-chat-observability.json</code></li>
+  <li>Abrir e favoritar o notebook v2 no tenant</li>
+</ul>
+
+<h4>Admin GitHub Copilot Enterprise</h4>
+<ul class="checklist">
+  <li>Confirmar plano Copilot Business ou Enterprise contratado</li>
+  <li>Selecionar organização hospedeira em AI Controls → Agents</li>
+  <li>Criar (se não existir) o repositório <code>.github-private</code></li>
+  <li>Publicar <code>copilot/managed-settings.json</code> no branch default</li>
+  <li>Validar em 1 máquina piloto com Policy Diagnostics</li>
+</ul>
+
+<h4>DPO / Jurídico (só se quiserem captureContent=true no futuro)</h4>
+<ul class="checklist">
+  <li>Aprovar política de captura de prompts/respostas</li>
+  <li>Validar comunicação transparente aos devs</li>
+  <li>Definir período de retenção adequado no Grail</li>
+</ul>
+
+<!-- ═════════════════ 14. REFERÊNCIAS ═════════════════ -->
+<h2><span class="num">14</span>Referências oficiais</h2>
+<ul style="font-size: 9.5pt;">
+  <li>VS Code — <em>Monitor agent usage with OpenTelemetry</em>: code.visualstudio.com/docs/agents/guides/monitoring-agents</li>
+  <li>VS Code — <em>Manage AI settings in enterprise environments</em>: code.visualstudio.com/docs/enterprise/ai-settings</li>
+  <li>GitHub Changelog — <em>Enterprise-managed OpenTelemetry export</em> (08/jul/2026): github.blog/changelog/2026-07-08</li>
+  <li>GitHub Changelog — <em>Enterprise managed-settings.json GA</em> (01/jul/2026): github.blog/changelog/2026-07-01</li>
+  <li>Dynatrace — <em>AI &amp; LLM Observability</em>: docs.dynatrace.com/docs/observe/dynatrace-for-ai-observability</li>
+  <li>OTel — <em>GenAI Semantic Conventions</em>: github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai</li>
+</ul>
+
+<footer>
+  Guia Completo de Implantação — Boa Vista × Dynatrace · Copilot Chat Observability<br>
+  17 de julho de 2026 · Dynatrace Consulting
+</footer>
+
+</body>
+</html>

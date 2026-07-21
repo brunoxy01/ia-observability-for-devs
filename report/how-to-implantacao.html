@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>How-To — Copilot Chat Observability com Dynatrace</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 40px;
+    font-size: 10.5pt;
+  }
+  h1, h2, h3, h4 { line-height: 1.3; page-break-after: avoid; }
+  h1 {
+    font-size: 22pt;
+    margin: 0 0 4px 0;
+    color: #1496ff;
+    border-bottom: 3px solid #1496ff;
+    padding-bottom: 8px;
+  }
+  .subtitle { color: #4a5b6b; font-size: 11pt; margin: 0 0 20px 0; }
+  h2 {
+    font-size: 15pt;
+    margin: 24px 0 10px 0;
+    padding: 8px 0 4px 0;
+    border-bottom: 1px solid #e8ecef;
+  }
+  h2 .step {
+    display: inline-block;
+    background: #1496ff;
+    color: white;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 12pt;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  h3 { font-size: 12pt; margin: 15px 0 5px 0; color: #7c3aed; }
+  h4 { font-size: 11pt; margin: 10px 0 4px 0; }
+  code, pre { font-family: "JetBrains Mono", Menlo, Monaco, monospace; font-size: 9pt; }
+  code {
+    background: #f0f2f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #d63384;
+    word-break: break-all;
+  }
+  pre {
+    background: #1e2936;
+    color: #e6edf3;
+    padding: 12px 16px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.5;
+    white-space: pre;
+    page-break-inside: avoid;
+  }
+  pre code { background: none; color: inherit; padding: 0; word-break: normal; }
+  pre.small { font-size: 8.5pt; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 15px 0;
+    font-size: 9.5pt;
+  }
+  th { background: #1a2936; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e8ecef; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .callout {
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 4px;
+    border-left: 4px solid;
+    font-size: 10pt;
+  }
+  .info { background: #eff6ff; border-color: #1496ff; }
+  .warn { background: #fefce8; border-color: #eab308; }
+  .success { background: #f0fdf4; border-color: #16a34a; }
+  .danger { background: #fef2f2; border-color: #dc2626; }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .arch {
+    background: #f6f8fa;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 9pt;
+    white-space: pre;
+    line-height: 1.4;
+    margin: 12px 0;
+    color: #1a1a1a;
+  }
+  .kbd {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: monospace;
+    font-size: 9pt;
+  }
+  footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid #e8ecef;
+    color: #6a7b8b;
+    font-size: 9pt;
+    text-align: center;
+  }
+  .no-break { page-break-inside: avoid; }
+  @media print {
+    body { padding: 12mm 15mm; max-width: none; font-size: 9.5pt; }
+    h2 { page-break-before: auto; margin-top: 18px; }
+    pre { font-size: 8pt; }
+  }
+</style>
+</head>
+<body>
+
+<h1>How-To — Copilot Chat Observability com Dynatrace</h1>
+<p class="subtitle">Guia técnico de implantação · Boa Vista · Julho 2026</p>
+
+<div class="callout info">
+  <strong>Objetivo</strong>
+  Este documento descreve, passo a passo, como implantar a observabilidade em tempo real do GitHub Copilot Chat dos desenvolvedores da Boa Vista dentro do Dynatrace, reproduzindo os mesmos resultados obtidos na POC.
+</div>
+
+<h2>Arquitetura</h2>
+
+<div class="arch">┌────────────────────┐       ┌───────────────────────┐       ┌───────────────────┐
+│  Dev / VS Code     │       │  OTel Collector       │       │  Dynatrace        │
+│  Copilot Chat      │──OTLP─│  (rede corporativa)   │──OTLP─│  AI Observability │
+│  (extension)       │  4318 │  otelcol-contrib      │ 443/tls│ fov31014          │
+└────────────────────┘       └───────────────────────┘       └───────────────────┘
+        ▲
+        │ managed policy
+        │
+┌────────────────────┐
+│  GitHub Enterprise │
+│  .github-private/  │
+│  copilot/          │
+│  managed-settings  │
+│  .json             │
+└────────────────────┘</div>
+
+<table>
+  <thead><tr><th>Componente</th><th>Papel</th><th>Onde roda</th></tr></thead>
+  <tbody>
+    <tr><td>VS Code + Copilot Chat</td><td>Emite spans/metrics OTel de cada chat, tool call e sub-agent</td><td>Máquina do dev</td></tr>
+    <tr><td>OTel Collector</td><td>Recebe telemetria da rede interna e forwarda para o Dynatrace (adiciona auth, opcionalmente mascara PII)</td><td>Container em VM ou Kubernetes na rede da Boa Vista</td></tr>
+    <tr><td>managed-settings.json</td><td>Ativa e configura OTel em todos os VS Codes automaticamente, sem que o dev toque em nada</td><td>Repositório <code>.github-private</code> na org do GHEC</td></tr>
+    <tr><td>Dynatrace AI Observability</td><td>Recebe, armazena no Grail, disponibiliza dashboards, app e DQL</td><td>SaaS — tenant <code>fov31014</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Pré-requisitos</h2>
+
+<ul>
+  <li><strong>GitHub Copilot Business ou Enterprise</strong> — o plano Individual não suporta managed settings</li>
+  <li><strong>GitHub Enterprise Cloud (GHEC)</strong> com <em>AI Controls</em> habilitado, se o rollout for via server-managed. Alternativa: file-based via MDM ou Ansible/Chef/Puppet.</li>
+  <li><strong>VS Code 1.128 ou superior</strong> nos devs (para respeitar a precedência das managed policies)</li>
+  <li><strong>Acesso admin ao tenant Dynatrace</strong> para gerar API tokens</li>
+  <li><strong>1 VM ou pod Kubernetes</strong> na rede corporativa (2 vCPU / 2 GB RAM já bastam)</li>
+  <li><strong>Firewall liberado</strong>: ingresso 4318/tcp da rede de devs no collector; egresso 443/tcp do collector para <code>*.live.dynatrace.com</code></li>
+</ul>
+
+<h2><span class="step">1</span>Criar o token de ingest no Dynatrace</h2>
+
+<p>No tenant <code>fov31014</code>:</p>
+
+<ol>
+  <li><span class="kbd">Ctrl+K</span> → <strong>Access Tokens</strong> → <strong>Generate new token</strong></li>
+  <li>Nome sugerido: <code>copilot-otlp-ingest</code></li>
+  <li>Marcar os scopes:
+    <ul>
+      <li><code>openTelemetryTrace.ingest</code></li>
+      <li><code>metrics.ingest</code></li>
+    </ul>
+  </li>
+  <li>Gerar — o token começa com <code>dt0c01.</code></li>
+  <li>Salvar no cofre corporativo (1Password, Vault, AWS Secrets Manager, etc.)</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Nunca distribuir esse token para as máquinas dos devs.</strong>
+  Ele fica <strong>apenas no OTel Collector</strong>. Isso permite rotação sem redeploy nos devs e reduz drasticamente a superfície de exposição.
+</div>
+
+<h2><span class="step">2</span>Provisionar o OTel Collector</h2>
+
+<h3>2.1 Estrutura do host</h3>
+
+<p>Requisitos mínimos: 2 vCPU, 2 GB RAM, 10 GB disco. Sistema operacional Linux (qualquer distribuição LTS) ou Container OS. Distros testadas: Ubuntu 22.04, Amazon Linux 2023, RHEL 9.</p>
+
+<h3>2.2 Arquivo <code>compose.yml</code></h3>
+
+<pre><code>services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: bv-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    env_file: .env
+    ports:
+      - "4318:4318"     # OTLP HTTP (VS Code envia aqui)
+      - "4317:4317"     # OTLP gRPC (alternativa)
+      - "13133:13133"   # Health check
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133"]
+      interval: 30s
+      timeout: 5s
+      retries: 3</code></pre>
+
+<h3>2.3 Arquivo <code>otel-collector-config.yaml</code></h3>
+
+<pre class="small"><code>receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        max_request_body_size: 4194304
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: upsert
+
+exporters:
+  otlphttp/dynatrace:
+    endpoint: ${env:DT_OTLP_ENDPOINT}
+    headers:
+      Authorization: "Api-Token ${env:DT_INGEST_TOKEN}"
+    compression: gzip
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace]</code></pre>
+
+<h3>2.4 Arquivo <code>.env</code></h3>
+
+<pre><code>DT_OTLP_ENDPOINT=https://fov31014.live.dynatrace.com/api/v2/otlp
+DT_INGEST_TOKEN=dt0c01.XXXXXXXXXXXXXXXXXXXXXXXX...</code></pre>
+
+<h3>2.5 Subir o collector</h3>
+
+<pre><code>docker compose up -d
+docker logs -f bv-otel-collector</code></pre>
+
+<p>Validar que o health check responde:</p>
+
+<pre><code>curl http://otel-collector.boavista.corp:13133/</code></pre>
+
+<div class="callout success">
+  <strong>Teste antes do rollout</strong> Envie um span sintético para confirmar que o pipeline funciona:
+  <pre style="margin-top:6px;"><code>curl -X POST http://otel-collector.boavista.corp:4318/v1/traces \
+  -H "Content-Type: application/json" \
+  -d '{"resourceSpans":[{"scopeSpans":[{"spans":[{
+    "traceId":"00112233445566778899aabbccddeeff",
+    "spanId":"0011223344556677","name":"test",
+    "startTimeUnixNano":"1721242400000000000",
+    "endTimeUnixNano":"1721242401000000000"}]}]}]}'</code></pre>
+  Retorno <code>HTTP 200</code> → OK. Aguarde ~15s e valide no Dynatrace com DQL: <code>fetch spans | filter span.name == "test" | limit 5</code>.
+</div>
+
+<h2><span class="step">3</span>Configurar DNS interno</h2>
+
+<p>Criar um registro DNS interno apontando para o host do collector:</p>
+
+<pre><code>otel-collector.boavista.corp   →   10.x.x.x (IP do host)</code></pre>
+
+<p>Isso será usado no <code>managed-settings.json</code> como endpoint OTLP.</p>
+
+<h2><span class="step">4</span>Publicar o <code>managed-settings.json</code> no GitHub</h2>
+
+<h3>4.1 Selecionar organização hospedeira</h3>
+<ol>
+  <li>No GitHub Enterprise Settings, ir em <strong>AI Controls</strong> → <strong>Agents</strong></li>
+  <li>Selecionar a organização que hospedará o <code>.github-private</code> (geralmente uma org corporate/central)</li>
+</ol>
+
+<h3>4.2 Criar o repositório <code>.github-private</code></h3>
+<p>Se ainda não existir, criar um repositório privado com esse nome exato na organização selecionada.</p>
+
+<h3>4.3 Adicionar o arquivo</h3>
+<p>Path: <code>copilot/managed-settings.json</code> (no branch default, geralmente <code>main</code>).</p>
+
+<pre><code>{
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "https://otel-collector.boavista.corp:4318",
+    "protocol": "otlp-http",
+    "captureContent": false,
+    "lockCaptureContent": true,
+    "serviceName": "copilot-chat-boavista",
+    "resourceAttributes": {
+      "deployment.environment": "production",
+      "organization": "boavista",
+      "cost_center": "engineering"
+    }
+  }
+}</code></pre>
+
+<h3>4.4 Campos explicados</h3>
+
+<table>
+  <thead><tr><th>Campo</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><code>enabled</code></td><td>Liga a exportação OTel do Copilot Chat</td></tr>
+    <tr><td><code>endpoint</code></td><td>URL do OTel Collector interno</td></tr>
+    <tr><td><code>protocol</code></td><td><code>otlp-http</code> (recomendado) ou <code>otlp-grpc</code></td></tr>
+    <tr><td><code>captureContent</code></td><td><code>false</code> = só metadados (safe LGPD). <code>true</code> = captura texto de prompt/resposta/tool. Só habilitar após aprovação do DPO.</td></tr>
+    <tr><td><code>lockCaptureContent</code></td><td><code>true</code> impede que devs sobrescrevam <code>captureContent</code> individualmente</td></tr>
+    <tr><td><code>serviceName</code></td><td>Valor de <code>service.name</code> nos spans (default: <code>copilot-chat</code>)</td></tr>
+    <tr><td><code>resourceAttributes</code></td><td>Atributos extras adicionados a todos os spans</td></tr>
+  </tbody>
+</table>
+
+<h3>4.5 Alternativas de delivery</h3>
+
+<p>Se a Boa Vista não usa GHEC ou prefere não expor o repositório <code>.github-private</code>, existem 2 canais alternativos com precedência igual:</p>
+
+<table>
+  <thead><tr><th>Canal</th><th>Path</th><th>Quando usar</th></tr></thead>
+  <tbody>
+    <tr><td>File-based</td><td>Linux: <code>/etc/github-copilot/managed-settings.json</code><br>macOS: <code>/Library/Application Support/GitHubCopilot/managed-settings.json</code><br>Windows: <code>%ProgramFiles%\GitHubCopilot\managed-settings.json</code></td><td>Deploy via Ansible/Chef/Puppet/SCCM</td></tr>
+    <tr><td>Native MDM</td><td>Windows Registry: <code>HKLM\SOFTWARE\Policies\GitHubCopilot</code><br>macOS preference domain: <code>com.github.copilot</code></td><td>Frotas gerenciadas por Intune, Jamf, GPO</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="step">5</span>Validar em uma máquina piloto</h2>
+
+<h3>5.1 Verificar que a policy foi aplicada</h3>
+
+<p>Em um VS Code de um dev cuja conta está na org GHEC configurada:</p>
+
+<ol>
+  <li><span class="kbd">Cmd/Ctrl+Shift+P</span> → <strong>Developer: Policy Diagnostics</strong></li>
+  <li>Confirmar que aparece uma seção <em>Managed Settings</em> com <code>telemetry.enabled = true</code></li>
+  <li>Se não aparecer imediatamente, aguardar até 1h (VS Code refaz o pull hourly)</li>
+</ol>
+
+<h3>5.2 Fazer 2-3 interações com Copilot Chat</h3>
+
+<p>Qualquer pergunta serve. Aguardar ~15 segundos para o batch processor do collector enviar.</p>
+
+<h3>5.3 Validar no Dynatrace</h3>
+
+<p>Notebook do tenant (<span class="kbd">Ctrl+K</span> → Notebooks → novo) — colar:</p>
+
+<pre><code>fetch spans, from:now()-5m
+| filter service.name == "copilot-chat"
+| fields timestamp, span.name, gen_ai.request.model,
+         gen_ai.usage.input_tokens, gen_ai.usage.output_tokens,
+         user.email
+| sort timestamp desc
+| limit 20</code></pre>
+
+<p>Retorno esperado: linhas com <code>chat gpt-4o</code>, <code>chat claude-opus-*</code>, <code>execute_tool ...</code> e tokens preenchidos.</p>
+
+<h2><span class="step">6</span>Enriquecimento por dev/time (opcional)</h2>
+
+<p>Para popular <code>user.email</code>, <code>user.team</code>, <code>cost_center</code> automaticamente em cada span:</p>
+
+<h3>Opção A — via <code>OTEL_RESOURCE_ATTRIBUTES</code> distribuído por MDM</h3>
+
+<p>Setar variável de ambiente do sistema em cada máquina via Intune/Jamf:</p>
+
+<pre><code>OTEL_RESOURCE_ATTRIBUTES=user.email=$USER_EMAIL,user.team=$USER_TEAM,cost_center=$COST_CENTER</code></pre>
+
+<h3>Opção B — enrichment no OTel Collector via lookup</h3>
+
+<p>Adicionar processor no collector que faz lookup do <code>user.email</code> em CSV/AD/LDAP e adiciona <code>user.team</code>. Requer trabalho de integração mas centraliza o mapeamento.</p>
+
+<h2><span class="step">7</span>Consumir os dados no Dynatrace</h2>
+
+<h3>7.1 App AI &amp; LLM Observability (nativa)</h3>
+<p>Aba <strong>Service Health</strong> → filtrar por serviço <code>copilot-chat</code>. Aparecem automaticamente: contagem de LLM requests, tokens, latência, prompts (se <code>captureContent=true</code>), topologia de agents.</p>
+
+<h3>7.2 Dashboard custom (fornecido pela POC)</h3>
+<p>Importar o arquivo <code>dashboards/copilot-chat-observability.json</code> via <span class="kbd">Ctrl+K</span> → Dashboards → <strong>+ Dashboard</strong> → <strong>Upload</strong>. Traz widgets prontos de FinOps, SRE e adoção.</p>
+
+<h3>7.3 Notebook custom (fornecido pela POC)</h3>
+<p>URL do notebook criado programaticamente durante a POC:</p>
+<pre><code>https://fov31014.apps.dynatrace.com/ui/apps/dynatrace.notebooks/notebook/dcceeff0-befc-487d-8a04-b22ceb61d442</code></pre>
+
+<h2><span class="step">8</span>Rollback e troubleshooting</h2>
+
+<h3>Rollback rápido</h3>
+<ul>
+  <li><strong>Server-managed:</strong> comitar <code>{"telemetry":{"enabled":false}}</code> no <code>.github-private/copilot/managed-settings.json</code> — propaga em até 1h</li>
+  <li><strong>File-based:</strong> remover o arquivo via Ansible</li>
+  <li><strong>Native MDM:</strong> remover a policy da MDM</li>
+</ul>
+
+<h3>VS Code não emite nada</h3>
+<ol>
+  <li><span class="kbd">Cmd/Ctrl+Shift+P</span> → <strong>Developer: Policy Diagnostics</strong> — confirmar que <code>telemetry.enabled</code> está true</li>
+  <li>Testar exporter local: setar <code>github.copilot.chat.otel.exporterType</code> para <code>"console"</code> — spans aparecem no Output panel do VS Code (canal "GitHub Copilot Chat")</li>
+  <li>Verificar conectividade: <code>curl -v http://otel-collector.boavista.corp:4318/v1/traces -H "Content-Type: application/json" -d "{}"</code></li>
+</ol>
+
+<h3>Collector recebe, Dynatrace não mostra</h3>
+<ul>
+  <li>Ver logs do collector: procurar HTTP 401 (token inválido), 403 (scope faltando), erro de DNS</li>
+  <li>Confirmar que endpoint é <code>*.live.dynatrace.com</code> e não <code>*.apps.dynatrace.com</code></li>
+</ul>
+
+<h2>Considerações de LGPD</h2>
+
+<div class="callout success">
+  <strong>Modo padrão (captureContent = false):</strong> apenas metadados. Zero risco de PII. Não requer aprovação do DPO.
+</div>
+
+<div class="callout danger">
+  <strong>Modo captureContent = true:</strong> captura texto de prompt/resposta/tool. Inclui código-fonte, dados de arquivos abertos, comandos de terminal.
+  <ul style="margin: 4px 0 0 18px; padding: 0;">
+    <li>Aprovação do DPO necessária</li>
+    <li>Comunicação transparente aos devs</li>
+    <li>Habilitar redação de PII no collector (regex CPF, email, tokens)</li>
+    <li>Alinhar retenção no Grail (default 35d)</li>
+  </ul>
+</div>
+
+<h2>Referências oficiais</h2>
+<ul style="font-size: 9.5pt;">
+  <li>VS Code — Monitor agent usage with OpenTelemetry — <em>code.visualstudio.com/docs/agents/guides/monitoring-agents</em></li>
+  <li>VS Code — Manage AI settings in enterprise — <em>code.visualstudio.com/docs/enterprise/ai-settings</em></li>
+  <li>GitHub — Enterprise-managed OpenTelemetry export (jul/2026) — <em>github.blog/changelog/2026-07-08</em></li>
+  <li>GitHub — Enterprise managed-settings.json GA (jul/2026) — <em>github.blog/changelog/2026-07-01</em></li>
+  <li>Dynatrace — AI &amp; LLM Observability — <em>docs.dynatrace.com/docs/observe/dynatrace-for-ai-observability</em></li>
+  <li>OTel — GenAI Semantic Conventions — <em>github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai</em></li>
+</ul>
+
+<footer>
+  How-To Boa Vista × Dynatrace — Copilot Chat Observability · 17 de julho de 2026
+</footer>
+
+</body>
+</html>

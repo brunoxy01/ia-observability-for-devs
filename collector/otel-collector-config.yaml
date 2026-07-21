@@ -1,0 +1,100 @@
+# OpenTelemetry Collector — Config Boa Vista Copilot POC
+#
+# Recebe OTLP dos VS Codes dos devs via HTTP (4318) e gRPC (4317),
+# opcionalmente sanitiza PII, adiciona o token do Dynatrace e forwarda
+# para o tenant.
+#
+# Docs: https://opentelemetry.io/docs/collector/configuration/
+
+receivers:
+  # OTLP HTTP (usado pelo VS Code Copilot Chat)
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        # Aumenta o limite para permitir spans com captureContent
+        max_request_body_size: 4194304  # 4MB
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  # ── Batch: agrupa spans antes de enviar (recomendado pela Dynatrace) ─────
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+  # ── Enrichment: adiciona metadados sobre o collector ────────────────────
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: poc-boavista
+        action: upsert
+      - key: collector.instance
+        value: bv-otel-collector-01
+        action: upsert
+
+  # ── PII/Secret redaction (aplicado só se captureContent=true) ───────────
+  # Máscara CPFs, e-mails, chaves API antes de forwardar.
+  # Comentado por padrao — descomentar apenas se captureContent for ligado.
+  #
+  # transform:
+  #   trace_statements:
+  #     - context: span
+  #       statements:
+  #         # Máscara de CPF (formato ###.###.###-## ou ###########)
+  #         - replace_pattern(attributes["gen_ai.input.messages"], "\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}", "[CPF]") where attributes["gen_ai.input.messages"] != nil
+  #         - replace_pattern(attributes["gen_ai.output.messages"], "\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}", "[CPF]") where attributes["gen_ai.output.messages"] != nil
+  #         # Máscara de e-mail
+  #         - replace_pattern(attributes["gen_ai.input.messages"], "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+", "[EMAIL]") where attributes["gen_ai.input.messages"] != nil
+  #         - replace_pattern(attributes["gen_ai.output.messages"], "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+", "[EMAIL]") where attributes["gen_ai.output.messages"] != nil
+  #         # Máscara de API keys comuns
+  #         - replace_pattern(attributes["gen_ai.input.messages"], "(api[_-]?key|token|password|secret)\\s*[=:]\\s*['\"]?[A-Za-z0-9._\\-]+['\"]?", "$1=[REDACTED]") where attributes["gen_ai.input.messages"] != nil
+  #         # Truncagem de conteudo (proteção do backend Dynatrace)
+  #         - truncate_all(attributes, 8000)
+
+exporters:
+  # ── Dynatrace OTLP (o principal) ──────────────────────────────────────
+  otlphttp/dynatrace:
+    endpoint: ${env:DT_OTLP_ENDPOINT}
+    headers:
+      Authorization: "Api-Token ${env:DT_INGEST_TOKEN}"
+    compression: gzip
+
+  # ── Debug: log local (usar só em troubleshooting) ─────────────────────
+  # debug:
+  #   verbosity: detailed
+
+extensions:
+  # Health check em :13133 para o compose saber se o serviço subiu
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # zPages para inspeção local (:55679/debug/tracez)
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      # processors: [transform, batch, resource]  # <- usar essa linha se captureContent=true
+      exporters: [otlphttp/dynatrace]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/dynatrace]
+
+    # Pipeline de logs desabilitado — requer scope `logs.ingest` no token.
+    # Reative se precisar de logs de eventos do Copilot (session.start, user.feedback, etc.)
+    # e adicione o scope no token do Dynatrace.
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [batch, resource]
+    #   exporters: [otlphttp/dynatrace]
+
+  telemetry:
+    logs:
+      level: info

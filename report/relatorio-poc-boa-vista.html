@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Boa Vista × Dynatrace — GitHub Copilot Chat Observability — Relatório de POC</title>
+<style>
+  :root {
+    --primary: #1496ff;
+    --dark: #0f1e2d;
+    --gray: #4a5b6b;
+    --light-gray: #e8ecef;
+    --accent: #7c3aed;
+    --success: #16a34a;
+    --warn: #eab308;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: var(--dark);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    font-size: 11pt;
+  }
+  h1, h2, h3, h4 {
+    color: var(--dark);
+    line-height: 1.3;
+    page-break-after: avoid;
+  }
+  h1 {
+    font-size: 26pt;
+    margin: 0 0 8px 0;
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 10px;
+  }
+  h2 {
+    font-size: 18pt;
+    margin: 30px 0 12px 0;
+    color: var(--dark);
+    padding-top: 15px;
+    border-top: 1px solid var(--light-gray);
+  }
+  h3 {
+    font-size: 14pt;
+    margin: 22px 0 8px 0;
+    color: var(--accent);
+  }
+  h4 {
+    font-size: 12pt;
+    margin: 15px 0 6px 0;
+  }
+  .subtitle {
+    color: var(--gray);
+    font-size: 13pt;
+    margin: 0 0 25px 0;
+  }
+  .meta {
+    background: #f6f8fa;
+    padding: 12px 18px;
+    border-left: 4px solid var(--primary);
+    margin: 18px 0;
+    font-size: 10pt;
+    color: var(--gray);
+  }
+  .meta strong { color: var(--dark); }
+  code, pre {
+    font-family: "JetBrains Mono", Menlo, Monaco, "Courier New", monospace;
+    font-size: 9pt;
+  }
+  code {
+    background: #f0f2f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #d63384;
+  }
+  pre {
+    background: #1e2936;
+    color: #e6edf3;
+    padding: 14px 18px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.45;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: var(--dark);
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--light-gray);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .callout {
+    padding: 14px 18px;
+    margin: 15px 0;
+    border-radius: 5px;
+    border-left: 5px solid;
+  }
+  .callout-info { background: #eff6ff; border-color: var(--primary); }
+  .callout-warn { background: #fefce8; border-color: var(--warn); }
+  .callout-success { background: #f0fdf4; border-color: var(--success); }
+  .callout-danger { background: #fef2f2; border-color: var(--danger); }
+  .callout strong { display: block; margin-bottom: 5px; font-size: 11pt; }
+  .figure {
+    margin: 18px 0 25px 0;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .figure img {
+    max-width: 100%;
+    border: 1px solid var(--light-gray);
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .figure .caption {
+    font-size: 9pt;
+    color: var(--gray);
+    margin-top: 8px;
+    font-style: italic;
+  }
+  .placeholder {
+    background: repeating-linear-gradient(45deg, #f5f7fa, #f5f7fa 10px, #eef1f5 10px, #eef1f5 20px);
+    border: 2px dashed #c0c8d0;
+    padding: 40px 20px;
+    color: var(--gray);
+    font-size: 10pt;
+    border-radius: 5px;
+    text-align: center;
+  }
+  ul.checklist { list-style: none; padding-left: 0; }
+  ul.checklist li {
+    padding: 5px 0 5px 30px;
+    position: relative;
+  }
+  ul.checklist li:before {
+    content: "☐";
+    position: absolute;
+    left: 5px;
+    font-size: 14pt;
+    color: var(--primary);
+  }
+  .highlight-number {
+    font-size: 20pt;
+    color: var(--danger);
+    font-weight: bold;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 15px 0;
+  }
+  .card {
+    padding: 14px 18px;
+    background: #f6f8fa;
+    border-radius: 5px;
+    border-left: 3px solid var(--primary);
+  }
+  .card .card-title {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 5px;
+  }
+  .card .card-value {
+    font-size: 22pt;
+    color: var(--primary);
+    font-weight: 700;
+    line-height: 1;
+    margin: 5px 0;
+  }
+  .card .card-desc {
+    font-size: 9pt;
+    color: var(--gray);
+  }
+  .toc {
+    background: #f6f8fa;
+    padding: 15px 25px;
+    border-radius: 5px;
+    margin-bottom: 25px;
+  }
+  .toc ol { margin: 5px 0; }
+  .toc li { margin: 3px 0; }
+  .page-break { page-break-before: always; }
+  footer {
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid var(--light-gray);
+    color: var(--gray);
+    font-size: 9pt;
+    text-align: center;
+  }
+  @media print {
+    body { padding: 15mm 15mm; max-width: none; }
+    h2 { page-break-before: auto; }
+    .no-print { display: none; }
+    pre { font-size: 8pt; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Boa Vista × Dynatrace<br>GitHub Copilot Chat Observability</h1>
+<p class="subtitle">Relatório da POC — Visibilidade em tempo real do uso de Copilot pelos devs</p>
+
+<div class="meta">
+  <strong>Cliente:</strong> Equifax Boa Vista &nbsp;|&nbsp;
+  <strong>Tenant:</strong> https://fov31014.apps.dynatrace.com &nbsp;|&nbsp;
+  <strong>Data:</strong> 17 de julho de 2026<br>
+  <strong>Escopo:</strong> Observabilidade do GitHub Copilot Chat nas IDEs (VS Code) via OpenTelemetry nativo, com dados reais coletados durante a POC.
+</div>
+
+<div class="toc">
+  <strong>Sumário</strong>
+  <ol>
+    <li>Resumo executivo</li>
+    <li>O que a POC comprovou (com dados reais)</li>
+    <li>Arquitetura da solução</li>
+    <li>Evidências capturadas (dashboards e traces)</li>
+    <li>O que a Boa Vista precisa fazer</li>
+    <li>Cronograma sugerido</li>
+    <li>Considerações de LGPD</li>
+    <li>Referências oficiais</li>
+  </ol>
+</div>
+
+<h2>1. Resumo executivo</h2>
+
+<p>
+Esta POC demonstra, com <strong>dados reais capturados durante a implementação</strong>, que é
+possível ter visibilidade em tempo real do consumo do GitHub Copilot Chat pelos desenvolvedores
+da Boa Vista, incluindo <strong>modelos utilizados, tokens consumidos, custo estimado, latência,
+erros e ferramentas invocadas</strong> — tudo dentro do Dynatrace, aproveitando o app nativo
+<em>AI &amp; LLM Observability</em>.
+</p>
+
+<p>A solução usa exclusivamente <strong>tecnologia oficial e disponível hoje</strong>:</p>
+
+<ul>
+  <li>OpenTelemetry nativo do VS Code Copilot Chat (GA desde julho/2026)</li>
+  <li>Enterprise-managed settings do GitHub Copilot (GA desde 01/jul/2026)</li>
+  <li>OTel Collector open-source</li>
+  <li>Dynatrace AI &amp; LLM Observability (GA)</li>
+</ul>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">Setup técnico</div>
+    <div class="card-value">1 dia</div>
+    <div class="card-desc">Tempo estimado para infraestrutura mínima (collector + token)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rollout aos devs</div>
+    <div class="card-value">0 min</div>
+    <div class="card-desc">Devs não tocam em nada — enforcement central via managed settings</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Cobertura</div>
+    <div class="card-value">100%</div>
+    <div class="card-desc">Dos 4 pilares solicitados (FinOps, SRE, Erros, Adoção)</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Overhead no dev</div>
+    <div class="card-value">&lt;1%</div>
+    <div class="card-desc">CPU/RAM adicional. Export assíncrono, não bloqueia.</div>
+  </div>
+</div>
+
+<h2>2. O que a POC comprovou (com dados reais)</h2>
+
+<p>
+Durante a construção da POC, com <strong>apenas uma máquina (a do consultor da Dynatrace)</strong>
+emitindo telemetria, capturamos os seguintes dados nas últimas 24 horas:
+</p>
+
+<h3>2.1 Custo real observado</h3>
+
+<div class="figure">
+  <img src="images/03-custo-por-modelo.png" alt="Custo por modelo — captura Dynatrace">
+  <div class="caption">Custo estimado por modelo — última 24h — <strong>US$ 227,65 em 21 chamadas</strong> ao Claude Opus 4.7</div>
+</div>
+
+<div class="callout callout-danger">
+  <strong>Insight de FinOps</strong>
+  Uma única pessoa em uma máquina, em 24 horas de uso normal de Copilot Chat, consumiu
+  <span class="highlight-number">US$ 227,65</span> em chamadas ao <code>claude-opus-4.7</code>.
+  Isso equivale a <strong>~US$ 11 por chamada</strong> em conversas longas.
+  <br><br>
+  Extrapolando para os <strong>47 devs</strong> da Boa Vista com padrão de uso similar, o consumo
+  potencial é de <strong>~US$ 10.700 por dia</strong>, ou <strong>~US$ 320 mil por mês</strong>.
+  Sem essa observabilidade, esse número é invisível — vocês veem apenas a fatura agregada.
+</div>
+
+<h3>2.2 Volume e sessões</h3>
+
+<div class="figure">
+  <img src="images/02-volume-24h.png" alt="Volume 24h — Dynatrace">
+  <div class="caption">Volume nas últimas 24h: <strong>41 chats</strong> + <strong>28 execuções de ferramenta</strong> em <strong>26 sessões distintas</strong>.</div>
+</div>
+
+<h3>2.3 Agents e sub-agents descobertos</h3>
+
+<div class="figure">
+  <img src="images/01-sanity-check.png" alt="Sanity check — agents ativos">
+  <div class="caption">Sete agents/sub-agents distintos foram observados na última hora, incluindo <code>panel/editAgent</code>, <code>copilotLanguageModelWrapper</code> e <code>backgroundTodoAgent</code>.</div>
+</div>
+
+<div class="callout callout-warn">
+  <strong>Descoberta importante</strong>
+  O GitHub Copilot não é uma chamada única — ele dispara <strong>múltiplos sub-agents em paralelo</strong>
+  (progressMessages, backgroundTodoAgent, copilotLanguageModelWrapper) que também consomem tokens.
+  Isso normalmente é <strong>invisível</strong> em faturas agregadas. Aqui vocês veem cada sub-agent
+  separadamente e podem otimizar.
+</div>
+
+<div class="figure">
+  <img src="images/09-agents-topology.png" alt="Topologia de agents">
+  <div class="caption">Topologia automática construída pelo Dynatrace: 6 agents identificados, 6 modelos LLM em uso, 2 providers (github, copilot-chat).</div>
+</div>
+
+<h3>2.4 Traces distribuídos completos</h3>
+
+<div class="figure">
+  <img src="images/10-distributed-trace.png" alt="Trace distribuído de uma sessão">
+  <div class="caption">Uma única invocação do agent Copilot Chat com <strong>4 min 18s de duração</strong>, composta por <strong>27 spans aninhados</strong>: chats para claude-opus-4.7, execuções de tools (create_file, run_in_terminal, mcp_dynatrace_mcp_execute_dql), etc.</div>
+</div>
+
+<h3>2.5 Latência e adoção por modelo</h3>
+
+<div class="figure">
+  <img src="images/06-latencia-modelo.png" alt="Latência P50/P95/P99">
+  <div class="caption">Latência P50/P95/P99 por modelo (nota: valores em microssegundos indicam que o span registrado é do wrapper interno, não da chamada de rede completa — para métrica end-to-end usar <code>copilot_chat.time_to_first_token</code>).</div>
+</div>
+
+<div class="figure">
+  <img src="images/07-modelos-adocao.png" alt="Modelos mais usados">
+  <div class="caption">Modelos mais usados nos últimos 7 dias — <code>gpt-4o-mini</code> serve tarefas auxiliares (baratas), <code>claude-opus-4.7</code> serve conversas principais (caras).</div>
+</div>
+
+<h3>2.6 Aba nativa "AI Observability" do Dynatrace</h3>
+
+<div class="figure">
+  <img src="images/08-ai-observability-app.png" alt="AI Observability app — Prompts">
+  <div class="caption">A app nativa <strong>AI &amp; LLM Observability</strong> reconhece automaticamente o service <code>copilot-chat</code> — <strong>58 LLM requests</strong> e <strong>23M tokens</strong> na visão de 30 minutos. Aba Prompts mostra cada input/output em detalhe.</div>
+</div>
+
+<div class="figure">
+  <img src="images/11-prompts-stream.png" alt="Prompts stream">
+  <div class="caption">Stream de prompts em tempo real com input/output visíveis (nesta POC <code>captureContent=false</code>, mas o app já suporta prompt inspection quando habilitado).</div>
+</div>
+
+<h3>2.7 Custo por dev e por time</h3>
+
+<div class="figure">
+  <img src="images/04-custo-por-dev.png" alt="Custo por dev top 20">
+  <div class="caption">Custo por dev — pronto para popular com todos os 47 devs após o rollout enterprise. Atualmente com apenas 1 dev (o consultor) durante o piloto.</div>
+</div>
+
+<div class="figure">
+  <img src="images/05-custo-por-time.png" alt="Custo por time 7 dias">
+  <div class="caption">Custo agregado por squad/time — vai crescer conforme o rollout expande.</div>
+</div>
+
+<h2>3. Arquitetura da solução</h2>
+
+<pre><code>┌─────────────────┐      ┌────────────────────┐      ┌──────────────────┐
+│  VS Code Dev    │      │  OTel Collector    │      │  Dynatrace       │
+│  Copilot Chat   │─────▶│  (rede corporativa)│─────▶│  AI Observability│
+│                 │ OTLP │  fov31014.corp     │ auth │  fov31014        │
+└─────────────────┘      └────────────────────┘      └──────────────────┘
+        ▲
+        │ managed-settings.json
+        │
+┌─────────────────┐
+│ GitHub Enterprise│
+│ .github-private │
+└─────────────────┘</code></pre>
+
+<p>Três componentes, todos usando tecnologia GA:</p>
+
+<ol>
+  <li><strong>VS Code + Copilot Chat extension</strong> — emite spans/metrics/logs OTel nativamente (GA jul/2026)</li>
+  <li><strong>OTel Collector corporativo</strong> — 1 container na rede da Boa Vista, recebe telemetria dos devs e forwarda pro Dynatrace</li>
+  <li><strong>Dynatrace AI &amp; LLM Observability app</strong> — recebe, armazena no Grail, disponibiliza dashboards e DQL</li>
+</ol>
+
+<p><strong>Enforcement central:</strong> um arquivo <code>managed-settings.json</code> publicado
+no repositório <code>.github-private</code> da org Boa Vista no GitHub aplica a configuração de
+telemetria automaticamente a <strong>todos os devs</strong>, sem que nenhum deles precise
+configurar nada localmente.</p>
+
+<h2 class="page-break">4. O que a Boa Vista precisa fazer</h2>
+
+<p>Divide-se em <strong>3 responsáveis</strong>. Nenhum deles depende do outro para começar.</p>
+
+<h3>4.1 Time de Plataforma / SRE</h3>
+<p><strong>Objetivo:</strong> subir 1 container que recebe telemetria e forwarda pro Dynatrace.</p>
+<ul class="checklist">
+  <li>Provisionar 1 host na rede corporativa (VM 2 vCPU / 2 GB RAM ou Kubernetes)</li>
+  <li>Abrir firewall: <strong>ingresso</strong> porta 4318/tcp da rede de devs; <strong>egresso</strong> para <code>fov31014.live.dynatrace.com:443</code></li>
+  <li>Definir DNS interno, ex.: <code>otel-collector.boavista.corp</code></li>
+  <li>Subir o OTel Collector com os arquivos fornecidos (<code>compose.yml</code> + <code>otel-collector-config.yaml</code>)</li>
+  <li>(Opcional) Habilitar TLS/mTLS no receiver se rede não for confiável</li>
+</ul>
+<p><strong>Prazo estimado:</strong> 1 dia útil.</p>
+
+<h3>4.2 Admin do Dynatrace</h3>
+<p><strong>Objetivo:</strong> criar tokens com scopes mínimos e importar assets prontos.</p>
+<ul class="checklist">
+  <li>Criar API Token classic (<code>dt0c01.*</code>) no tenant <code>fov31014</code> com os scopes:
+    <ul>
+      <li><code>openTelemetryTrace.ingest</code></li>
+      <li><code>metrics.ingest</code></li>
+    </ul>
+  </li>
+  <li>Entregar o token ao time de Plataforma via cofre (1Password, Vault, etc.)</li>
+  <li>Importar o dashboard <code>copilot-chat-observability.json</code> via UI (Ctrl+K → Dashboards → Upload)</li>
+  <li>Abrir e favoritar o Notebook v2 já criado no tenant</li>
+</ul>
+<p><strong>Prazo estimado:</strong> 30 minutos.</p>
+
+<h3>4.3 Admin do GitHub Copilot Enterprise</h3>
+<p><strong>Objetivo:</strong> fazer com que todos os 47 devs emitam telemetria automaticamente.</p>
+<ul class="checklist">
+  <li>Confirmar plano contratado (obrigatoriamente <strong>Copilot Business</strong> ou <strong>Enterprise</strong>)</li>
+  <li>No GitHub Enterprise Settings → <strong>AI Controls</strong> → <strong>Agents</strong>, selecionar organização hospedeira</li>
+  <li>Criar (se não existir) o repositório <code>.github-private</code> nessa org</li>
+  <li>Publicar o arquivo <code>copilot/managed-settings.json</code> no branch default</li>
+  <li>Aguardar ~1h para propagação automática (VS Code refaz pull hourly)</li>
+  <li>Validar em 1 máquina piloto rodando <em>Developer: Policy Diagnostics</em> no VS Code</li>
+</ul>
+<p><strong>Prazo estimado:</strong> 1 dia (incluindo aprovação interna do repositório <code>.github-private</code>).</p>
+
+<h4>Conteúdo do <code>managed-settings.json</code></h4>
+<pre><code>{
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "https://otel-collector.boavista.corp:4318",
+    "protocol": "otlp-http",
+    "captureContent": false,
+    "lockCaptureContent": true,
+    "serviceName": "copilot-chat-boavista",
+    "resourceAttributes": {
+      "deployment.environment": "production",
+      "organization": "boavista",
+      "cost_center": "engineering"
+    }
+  }
+}</code></pre>
+
+<h3>4.4 Enriquecimento de identidade (opcional, mas recomendado)</h3>
+<p>Para popular <code>user.email</code>, <code>user.team</code>, <code>cost_center</code> em cada span:</p>
+<ul class="checklist">
+  <li>Preparar CSV <code>email → team → cost_center</code> (RH/Plataforma, uma única vez)</li>
+  <li>Adicionar processor de enrichment no collector para lookup automático a partir do <code>user.email</code></li>
+  <li>Alternativa: distribuir <code>OTEL_RESOURCE_ATTRIBUTES</code> via managed settings do SO (Intune/Jamf)</li>
+</ul>
+
+<h2>5. Cronograma sugerido</h2>
+
+<table>
+  <thead>
+    <tr><th>Semana</th><th>Atividade</th><th>Responsável</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Kickoff técnico + criação de tokens Dynatrace + provisionamento do host do collector</td><td>Consultor + SRE + Admin Dynatrace</td></tr>
+    <tr><td>1</td><td>Deploy do collector e validação com 3 devs piloto (configuração manual)</td><td>SRE + 3 devs voluntários</td></tr>
+    <tr><td>2</td><td>Ajustes de coleta + validação dos dashboards + preparação do <code>managed-settings.json</code></td><td>Consultor + Admin GitHub</td></tr>
+    <tr><td>2</td><td>Publicação no <code>.github-private</code> + rollout para todos os 47 devs</td><td>Admin GitHub</td></tr>
+    <tr><td>3</td><td>Coleta de dados de linha de base (baseline) + criação de alertas críticos</td><td>Consultor + SRE</td></tr>
+    <tr><td>4</td><td>Apresentação executiva dos resultados (custo real / adoção / ROI)</td><td>Todos</td></tr>
+  </tbody>
+</table>
+
+<h2>6. Considerações de LGPD</h2>
+
+<p>A POC opera em <strong>modo LGPD-safe</strong> por padrão:</p>
+
+<div class="callout callout-success">
+  <strong>captureContent = false (default configurado)</strong>
+  Nenhum texto de prompt, resposta, código-fonte ou dados de arquivo é capturado. Apenas
+  metadados (modelo, tokens, latência, ferramenta). Zero risco de PII no Dynatrace.
+</div>
+
+<p>
+Se no futuro a Boa Vista quiser habilitar captura de conteúdo (prompt/resposta textual), será
+necessária uma <strong>trilha formal de aprovação</strong> envolvendo DPO, jurídico trabalhista e
+comunicação transparente aos devs. Detalhes em <code>docs/04-lgpd-privacy.md</code>.
+</p>
+
+<h2>7. Referências oficiais</h2>
+<ul>
+  <li><a href="https://code.visualstudio.com/docs/agents/guides/monitoring-agents">VS Code — Monitor agent usage with OpenTelemetry</a></li>
+  <li><a href="https://code.visualstudio.com/docs/enterprise/ai-settings">VS Code — Manage AI settings in enterprise environments</a></li>
+  <li><a href="https://github.blog/changelog/2026-07-08-enterprise-managed-opentelemetry-export-for-vs-code-and-cli">GitHub Changelog — Enterprise-managed OpenTelemetry export (08/jul/2026)</a></li>
+  <li><a href="https://github.blog/changelog/2026-07-01-enterprise-managed-settings-json-is-generally-available">GitHub Changelog — Enterprise managed-settings.json GA (01/jul/2026)</a></li>
+  <li><a href="https://docs.dynatrace.com/docs/observe/dynatrace-for-ai-observability">Dynatrace — AI Observability documentation</a></li>
+  <li><a href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/">OTel — GenAI Semantic Conventions</a></li>
+</ul>
+
+<footer>
+  Relatório da POC — Boa Vista × Dynatrace<br>
+  Gerado em 17 de julho de 2026 · Dynatrace Consulting
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+services:
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: bv-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    env_file: .env
+    ports:
+      # OTLP HTTP (usado pelo VS Code Copilot Chat)
+      - "4318:4318"
+      # OTLP gRPC
+      - "4317:4317"
+      # Health check
+      - "13134:13133"
+      # zPages (debug local)
+      - "55679:55679"
+    environment:
+      # Endpoint OTLP do Dynatrace (derivado do DT_TENANT — troca apps -> live)
+      DT_OTLP_ENDPOINT: "${DT_OTLP_ENDPOINT}"
+      DT_INGEST_TOKEN:  "${DT_INGEST_TOKEN}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

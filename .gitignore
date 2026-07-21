@@ -1,0 +1,14 @@
+# Env files
+.env
+collector/.env
+!.env.example
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Podman/Docker
+*.log

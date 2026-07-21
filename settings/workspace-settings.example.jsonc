@@ -1,0 +1,18 @@
+// workspace-settings.example.jsonc
+//
+// Alternativa ao user settings: coloca essas linhas em .vscode/settings.json de um
+// repositório específico. Assim, todos os devs que abrirem esse repo passam a emitir
+// telemetria, sem afetar outros projetos.
+//
+// Útil quando o piloto é por projeto (ex: "vamos observar só o repo `score-api`").
+//
+// IMPORTANTE: workspace settings tem precedência menor que user settings, que tem
+// precedência menor que managed policies. Ordem final:
+//   Native MDM > Server-managed > File-based managed > Env var > User > Workspace > Default
+
+{
+  "github.copilot.chat.otel.enabled": true,
+  "github.copilot.chat.otel.exporterType": "otlp-http",
+  "github.copilot.chat.otel.otlpEndpoint": "http://otel-collector.boavista.corp:4318",
+  "github.copilot.chat.otel.captureContent": false
+}
