@@ -1,6 +1,6 @@
 # Guia do admin — deploy do `managed-settings.json`
 
-Este documento é para o **time de admins do GitHub Copilot na Boa Vista**. Explica
+Este documento é para o **time de admins do GitHub Copilot na IA For Devs**. Explica
 como fazer com que **todos os devs** passem a emitir telemetria OTel para o
 collector corporativo, sem que cada dev precise configurar nada.
 
@@ -15,7 +15,7 @@ collector corporativo, sem que cada dev precise configurar nada.
 
 ## Canal 1 — Server-managed (recomendado para GitHub Enterprise Cloud)
 
-Requer que a org Boa Vista esteja no GHEC com AI Controls habilitado.
+Requer que a org IA For Devs esteja no GHEC com AI Controls habilitado.
 
 ### Passos
 
@@ -28,14 +28,14 @@ Requer que a org Boa Vista esteja no GHEC com AI Controls habilitado.
 {
   "telemetry": {
     "enabled": true,
-    "endpoint": "https://otel-collector.boavista.corp:4318",
+    "endpoint": "https://otel-collector.iafordevs.corp:4318",
     "protocol": "otlp-http",
     "captureContent": false,
     "lockCaptureContent": true,
-    "serviceName": "copilot-chat-boavista",
+    "serviceName": "copilot-chat-iafordevs",
     "resourceAttributes": {
       "deployment.environment": "production",
-      "organization": "boavista",
+      "organization": "iafordevs",
       "cost_center": "engineering"
     }
   }
@@ -99,12 +99,12 @@ Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\GitHubCopilot]
 "telemetry.enabled"=dword:00000001
-"telemetry.endpoint"="https://otel-collector.boavista.corp:4318"
+"telemetry.endpoint"="https://otel-collector.iafordevs.corp:4318"
 "telemetry.protocol"="otlp-http"
 "telemetry.captureContent"=dword:00000000
 "telemetry.lockCaptureContent"=dword:00000001
-"telemetry.serviceName"="copilot-chat-boavista"
-"telemetry.resourceAttributes"="{\"deployment.environment\":\"production\",\"organization\":\"boavista\"}"
+"telemetry.serviceName"="copilot-chat-iafordevs"
+"telemetry.resourceAttributes"="{\"deployment.environment\":\"production\",\"organization\":\"iafordevs\"}"
 ```
 
 ### macOS (via Jamf ou managed preferences)
@@ -115,11 +115,11 @@ Configuration Profile `.mobileconfig` com o payload:
 
 ```xml
 <key>telemetry.enabled</key><true/>
-<key>telemetry.endpoint</key><string>https://otel-collector.boavista.corp:4318</string>
+<key>telemetry.endpoint</key><string>https://otel-collector.iafordevs.corp:4318</string>
 <key>telemetry.protocol</key><string>otlp-http</string>
 <key>telemetry.captureContent</key><false/>
 <key>telemetry.lockCaptureContent</key><true/>
-<key>telemetry.serviceName</key><string>copilot-chat-boavista</string>
+<key>telemetry.serviceName</key><string>copilot-chat-iafordevs</string>
 ```
 
 ## Campos do bloco `telemetry` — referência
@@ -151,7 +151,7 @@ por segurança — evita vazar tokens para processos filhos.
 ```bash
 # GHEC API — confirmar que a source-org está configurada:
 curl -H "Authorization: Bearer $GH_TOKEN" \
-  https://api.github.com/enterprises/boavista/copilot/custom-agents-source
+  https://api.github.com/enterprises/iafordevs/copilot/custom-agents-source
 ```
 
 ### Do lado do dev
@@ -161,7 +161,7 @@ No VS Code, `Cmd+Shift+P` → **Developer: Policy Diagnostics**. Deve aparecer:
 ```
 Managed Settings (source: server-managed)
 ✓ telemetry.enabled = true
-✓ telemetry.endpoint = https://otel-collector.boavista.corp:4318
+✓ telemetry.endpoint = https://otel-collector.iafordevs.corp:4318
 ✓ telemetry.captureContent = false [locked]
 ```
 

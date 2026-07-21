@@ -43,7 +43,7 @@ podman-compose up -d
   // ── Captura de conteúdo ───────────────────────────────────────────
   // false = só metadados (modelo, tokens, latência). SEGURO.
   // true  = também captura prompt, resposta, tool args e resultados.
-  //         REQUER APROVAÇÃO JURÍDICA da Boa Vista antes de habilitar.
+  //         REQUER APROVAÇÃO JURÍDICA da IA For Devs antes de habilitar.
   "github.copilot.chat.otel.captureContent": false,
 
   // ── Limite de tamanho por atributo (proteção do backend) ──────────
@@ -105,7 +105,7 @@ Se retornar linhas, deu certo.
 Você pode adicionar atributos extras via variável de ambiente. No `.zshrc`/`.bashrc`:
 
 ```bash
-export OTEL_RESOURCE_ATTRIBUTES="user.email=seu.nome@boavista.com.br,user.team=plataforma-api,cost_center=engineering"
+export OTEL_RESOURCE_ATTRIBUTES="user.email=seu.nome@iafordevs.com.br,user.team=plataforma-api,cost_center=engineering"
 ```
 
 Reinicie o VS Code depois. No Dynatrace, esses atributos vão aparecer em todos os
@@ -113,7 +113,7 @@ spans, permitindo filtros por time/cost center/pessoa.
 
 ## Trocar entre "só metadados" e "conteúdo completo"
 
-**⚠️ Só habilite captureContent depois de aprovação jurídica da Boa Vista.**
+**⚠️ Só habilite captureContent depois de aprovação jurídica da IA For Devs.**
 
 Uma vez aprovado, mude no user settings:
 
@@ -162,6 +162,6 @@ Sim, se você configurar `OTEL_RESOURCE_ATTRIBUTES` com `user.email` ou `user.na
 No rollout enterprise, isso vai vir automaticamente via managed policy.
 
 **"Se eu logar em uma conta pessoal do GitHub, ainda vai capturar?"**
-Depende. No rollout enterprise a Boa Vista pode configurar `ChatApprovedAccountOrganizations`
+Depende. No rollout enterprise a IA For Devs pode configurar `ChatApprovedAccountOrganizations`
 para bloquear features de AI a menos que o dev esteja logado em uma conta corporativa.
 No piloto (user settings), sim, captura independente da conta.

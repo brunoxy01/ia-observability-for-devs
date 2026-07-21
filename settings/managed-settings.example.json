@@ -1,23 +1,23 @@
 {
   "_comment_1": "managed-settings.example.json",
-  "_comment_2": "Arquivo publicado pelo admin do GitHub Copilot na Boa Vista.",
+  "_comment_2": "Arquivo publicado pelo admin do GitHub Copilot na IA For Devs.",
   "_comment_3": "Aplica-se AUTOMATICAMENTE a todos os devs assim que eles fazem login.",
   "_comment_4": "Ver docs/02-admin-managed-settings.md para os canais de delivery.",
   "_comment_5": "Este arquivo NAO aceita comentarios reais em JSON — remover os _comment_* antes de publicar.",
 
   "telemetry": {
     "enabled": true,
-    "endpoint": "https://otel-collector.boavista.corp:4318",
+    "endpoint": "https://otel-collector.iafordevs.corp:4318",
     "protocol": "otlp-http",
 
     "captureContent": false,
     "lockCaptureContent": true,
 
-    "serviceName": "copilot-chat-boavista",
+    "serviceName": "copilot-chat-iafordevs",
 
     "resourceAttributes": {
       "deployment.environment": "production",
-      "organization": "boavista",
+      "organization": "iafordevs",
       "cost_center": "engineering"
     }
   },

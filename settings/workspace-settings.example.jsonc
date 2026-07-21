@@ -13,6 +13,6 @@
 {
   "github.copilot.chat.otel.enabled": true,
   "github.copilot.chat.otel.exporterType": "otlp-http",
-  "github.copilot.chat.otel.otlpEndpoint": "http://otel-collector.boavista.corp:4318",
+  "github.copilot.chat.otel.otlpEndpoint": "http://otel-collector.iafordevs.corp:4318",
   "github.copilot.chat.otel.captureContent": false
 }

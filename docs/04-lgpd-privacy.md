@@ -31,7 +31,7 @@ Além do acima, Dynatrace passa a receber:
 - `github.copilot.tool.parameters.file_path` — **caminhos de arquivos** manipulados
 
 Isso inclui, potencialmente:
-- Código-fonte proprietário da Boa Vista
+- Código-fonte proprietário da IA For Devs
 - Senhas / API keys embutidas no código (mesmo que temporariamente)
 - CPFs, e-mails, nomes de clientes se aparecerem em prompts ou arquivos
 - Comandos executados no terminal (que podem incluir credenciais)
@@ -45,9 +45,9 @@ Isso inclui, potencialmente:
 - Uma vez no Dynatrace (Grail), esses dados ficam armazenados por 35 dias (padrão) ou
   mais, com potencial de aparecer em logs, alertas, dashboards.
 - Precisa de base legal, comunicação ao titular do dado, e prazo de retenção alinhado
-  com a política interna da Boa Vista.
+  com a política interna da IA For Devs.
 
-**Encaminhamento sugerido:** DPO da Boa Vista precisa aprovar a captura antes de ativar.
+**Encaminhamento sugerido:** DPO da IA For Devs precisa aprovar a captura antes de ativar.
 
 ### 2. Segredo industrial e IP
 
@@ -126,7 +126,7 @@ processors:
           - truncate_all(attributes["gen_ai.input.messages"], 8000)
 ```
 
-## Recomendação para a POC Boa Vista
+## Recomendação para a POC IA For Devs
 
 **Rodar o piloto e o rollout enterprise inicial com `captureContent: false`.**
 
@@ -167,4 +167,4 @@ Sugestão de aviso interno antes de habilitar (mesmo no Nível 1):
 >
 > Dúvidas: contato do time de plataforma.
 
-Ajustar redação com o RH da Boa Vista.
+Ajustar redação com o RH da IA For Devs.

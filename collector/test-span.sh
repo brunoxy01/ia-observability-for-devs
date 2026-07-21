@@ -18,7 +18,7 @@ curl -sS -X POST http://localhost:4318/v1/traces \
         {"key":"service.name","value":{"stringValue":"copilot-chat"}},
         {"key":"service.version","value":{"stringValue":"1.128.0"}},
         {"key":"session.id","value":{"stringValue":"test-session-001"}},
-        {"key":"user.email","value":{"stringValue":"bruno.silva@boavista.com.br"}},
+        {"key":"user.email","value":{"stringValue":"bruno.silva@iafordevs.com.br"}},
         {"key":"user.name","value":{"stringValue":"Bruno Silva"}},
         {"key":"user.team","value":{"stringValue":"plataforma-api"}}
       ]
@@ -42,7 +42,7 @@ curl -sS -X POST http://localhost:4318/v1/traces \
           {"key":"gen_ai.usage.input_tokens","value":{"intValue":"342"}},
           {"key":"gen_ai.usage.output_tokens","value":{"intValue":"189"}},
           {"key":"llm.request.type","value":{"stringValue":"chat"}},
-          {"key":"github.copilot.git.repository","value":{"stringValue":"boavista/score-api"}},
+          {"key":"github.copilot.git.repository","value":{"stringValue":"iafordevs/score-api"}},
           {"key":"github.copilot.git.branch","value":{"stringValue":"main"}}
         ],
         "status": {"code": 1}

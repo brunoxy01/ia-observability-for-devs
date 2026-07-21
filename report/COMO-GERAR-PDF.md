@@ -11,7 +11,7 @@ Salve os screenshots que você tirou do Dynatrace com **exatamente** estes nomes
 | `01-sanity-check.png` | Notebook — Sanity check com 7 records de agents |
 | `02-volume-24h.png` | Notebook — Volume 24h (41 chats / 28 tools / 26 sessions) |
 | `03-custo-por-modelo.png` | Notebook — Custo total por modelo (US$227 Claude Opus) |
-| `04-custo-por-dev.png` | Notebook — Custo por dev top 20 (bruno.silva@boavista.com.br) |
+| `04-custo-por-dev.png` | Notebook — Custo por dev top 20 (bruno.silva@iafordevs.com.br) |
 | `05-custo-por-time.png` | Notebook — Custo por time 7 dias |
 | `06-latencia-modelo.png` | Notebook — Latência P50/P95/P99 por modelo |
 | `07-modelos-adocao.png` | Notebook — Modelos mais usados 7 dias |

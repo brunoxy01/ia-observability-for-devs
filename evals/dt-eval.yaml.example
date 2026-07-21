@@ -5,7 +5,7 @@
 # Referência completa de campos: https://github.com/dynatrace-oss/dt-evals
 
 schemaVersion: 2
-name: copilot-chat-boavista
+name: copilot-chat-iafordevs
 
 dynatrace:
   environmentUrl: https://fov31014.live.dynatrace.com

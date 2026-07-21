@@ -19,7 +19,7 @@
 
   // Endpoint do collector.
   //   - Piloto local:  http://localhost:4318
-  //   - Piloto remoto: http://otel-collector.boavista.corp:4318
+  //   - Piloto remoto: http://otel-collector.iafordevs.corp:4318
   "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318",
 
   // ═══════════════════════════════════════════════════════════════════
@@ -28,7 +28,7 @@
   //
   //   false = só metadados (modelo, tokens, latência). SEGURO. Recomendado.
   //   true  = captura prompt, resposta, tool args e resultados.
-  //           REQUER APROVAÇÃO JURÍDICA da Boa Vista antes de habilitar.
+  //           REQUER APROVAÇÃO JURÍDICA da IA For Devs antes de habilitar.
 
   "github.copilot.chat.otel.captureContent": false,
 

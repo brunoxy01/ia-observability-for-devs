@@ -1,4 +1,4 @@
-# OpenTelemetry Collector — Config Boa Vista Copilot POC
+# OpenTelemetry Collector — Config IA For Devs Copilot POC
 #
 # Recebe OTLP dos VS Codes dos devs via HTTP (4318) e gRPC (4317),
 # opcionalmente sanitiza PII, adiciona o token do Dynatrace e forwarda
@@ -27,7 +27,7 @@ processors:
   resource:
     attributes:
       - key: deployment.environment
-        value: poc-boavista
+        value: poc-iafordevs
         action: upsert
       - key: collector.instance
         value: bv-otel-collector-01

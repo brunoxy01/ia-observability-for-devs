@@ -5,7 +5,7 @@
     "0": {
       "type": "markdown",
       "title": "",
-      "content": "# 🤖 Boa Vista × Dynatrace — GitHub Copilot Chat Observability\n\n**Observabilidade em tempo real** do Copilot Chat nas IDEs dos devs, via OpenTelemetry nativo do VS Code.\n\n**Filtro global aplicado:** `gen_ai.provider.name == \"github\"` — captura Copilot Chat + Copilot CLI + Claude Agent quando presentes.\n\n---"
+      "content": "# 🤖 IA For Devs × Dynatrace — GitHub Copilot Chat Observability\n\n**Observabilidade em tempo real** do Copilot Chat nas IDEs dos devs, via OpenTelemetry nativo do VS Code.\n\n**Filtro global aplicado:** `gen_ai.provider.name == \"github\"` — captura Copilot Chat + Copilot CLI + Claude Agent quando presentes.\n\n---"
     },
 
     "10": {

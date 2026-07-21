@@ -29,7 +29,7 @@ agendado, lendo spans recentes via DQL e escrevendo os scores como bizevents.
 
 Este repo já traz o scaffold em [`evals/`](../evals) — não precisa instalar nada global.
 Requer Node.js ≥20 e um judge provider (OpenAI, Anthropic, Google, Bedrock ou Azure
-OpenAI); qualquer um funciona, escolha o que a Boa Vista já aprovou internamente.
+OpenAI); qualquer um funciona, escolha o que a IA For Devs já aprovou internamente.
 
 ```bash
 cd evals

@@ -1,4 +1,4 @@
-# Boa Vista × Dynatrace — Copilot AI Observability POC
+# IA For Devs × Dynatrace — Copilot AI Observability POC
 
 Observabilidade em tempo real do **GitHub Copilot Chat** nas IDEs dos devs, com dados
 fluindo para o **Dynatrace AI & LLM Observability**.
@@ -27,10 +27,10 @@ flowchart LR
     Dev[Dev usa Copilot Chat<br/>no VS Code] -->|OTLP HTTP| Collector[OTel Collector<br/>corporativo]
     Collector -->|Auth + PII redaction| Dynatrace[Dynatrace<br/>AI Observability]
 
-    Admin[Admin Boa Vista] -.->|managed-settings.json| Dev
+    Admin[Admin IA For Devs] -.->|managed-settings.json| Dev
 ```
 
-O admin da Boa Vista publica `managed-settings.json` em uma das três formas:
+O admin da IA For Devs publica `managed-settings.json` em uma das três formas:
 1. **Server-managed** (GitHub Enterprise): arquivo em `.github-private/copilot/managed-settings.json`
 2. **File-based**: arquivo colocado nas máquinas via MDM/Chef/Puppet/Ansible
 3. **Native MDM**: Windows Registry ou macOS managed preferences via Intune
@@ -41,11 +41,11 @@ collector corporativo, que adiciona o token do Dynatrace e forwarda pro tenant.
 ## Estrutura do repositório
 
 ```
-boa-vista-ia-demo/
+ia-observability-for-devs/
 ├── README.md                       (este arquivo)
 ├── docs/                           Documentação executiva e técnica
 │   ├── 01-arquitetura.md           Fluxo de dados, decisões, componentes
-│   ├── 02-admin-managed-settings.md  Como o admin da Boa Vista configura
+│   ├── 02-admin-managed-settings.md  Como o admin da IA For Devs configura
 │   ├── 03-dev-user-settings.md     Piloto: dev configura na própria máquina
 │   ├── 04-lgpd-privacy.md          Considerações LGPD + captureContent
 │   ├── 05-dql-queries.md           DQL para validar no Notebook
@@ -97,7 +97,7 @@ Microsoft, não este repo: [VS Code — AI settings reference](https://code.visu
    {
      // ...suas outras settings...,
 
-     // ── OpenTelemetry — Boa Vista POC (Copilot Chat → Dynatrace) ──
+     // ── OpenTelemetry — IA For Devs POC (Copilot Chat → Dynatrace) ──
      "github.copilot.chat.otel.enabled": true,
      "github.copilot.chat.otel.exporterType": "otlp-http",
      "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318",

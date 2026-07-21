@@ -1,4 +1,4 @@
-# Boa Vista × Dynatrace — GitHub Copilot Chat Observability
+# IA For Devs × Dynatrace — GitHub Copilot Chat Observability
 
 > Notebook Dynatrace criado programaticamente via MCP.
 > Este arquivo é a **fonte versionada** — se precisar recriar em outro tenant,

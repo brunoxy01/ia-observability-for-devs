@@ -3,7 +3,7 @@
 ## Visão geral
 
 O objetivo é observar, em tempo real, **cada interação de Copilot Chat feita por qualquer dev**
-da Boa Vista dentro do VS Code, e disponibilizar essa informação no Dynatrace AI
+da IA For Devs dentro do VS Code, e disponibilizar essa informação no Dynatrace AI
 Observability app para análise por FinOps e SRE.
 
 ## Componentes
@@ -13,7 +13,7 @@ flowchart LR
     subgraph "Máquina do dev"
         VSC[VS Code<br/>+ Copilot Chat]
     end
-    subgraph "Rede corporativa Boa Vista"
+    subgraph "Rede corporativa IA For Devs"
         Col[OTel Collector<br/>otelcol-contrib]
     end
     subgraph "GitHub"
@@ -58,7 +58,7 @@ Dynatrace AI Observability já entende sem configuração adicional.
 
 ### 2. OTel Collector corporativo (recomendado)
 
-O collector fica dentro da rede da Boa Vista e cumpre 3 funções:
+O collector fica dentro da rede da IA For Devs e cumpre 3 funções:
 
 1. **Concentrar autenticação** — o token de ingest do Dynatrace fica só no collector,
    não é distribuído para cada máquina de dev.
@@ -90,7 +90,7 @@ Três canais suportados (precedência do maior para o menor):
 | **Server-managed** (`.github-private/copilot/managed-settings.json`) | GitHub Enterprise Cloud com AI Controls | Segue o dev entre máquinas, atualização hourly automática | Só GHEC, não GHES |
 | **File-based** (`/etc/github-copilot/managed-settings.json`) | Deploy via Chef/Puppet/Ansible | Não depende de MDM nem GHEC | Precisa de config-mgmt em todos os hosts |
 
-**Recomendação Boa Vista:** começar com **File-based via Ansible** para o piloto (3-5 devs),
+**Recomendação IA For Devs:** começar com **File-based via Ansible** para o piloto (3-5 devs),
 migrar para **Server-managed** ou **Native MDM** no rollout completo.
 
 ## Segurança e Privacidade
@@ -124,7 +124,7 @@ Deixando explícito o que fica fora do escopo:
 - **Autocomplete inline** (sugestões enquanto o dev digita) — GitHub ainda não emite OTel.
 - **JetBrains, Visual Studio, Neovim** — o pacote OTel só está no VS Code Chat extension.
 - **Copilot na web (github.com/copilot)** — sem OTel.
-- **Uso do Copilot em outras orgs GitHub não gerenciadas pela Boa Vista** — VS Code
+- **Uso do Copilot em outras orgs GitHub não gerenciadas pela IA For Devs** — VS Code
   do dev logado em conta pessoal ignora managed settings da empresa.
 
 Para esses gaps, complementar com a **Copilot Usage Metrics API** do GitHub (dados

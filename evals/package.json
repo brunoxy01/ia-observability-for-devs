@@ -1,5 +1,5 @@
 {
-  "name": "boa-vista-copilot-evals",
+  "name": "ia-for-devs-copilot-evals",
   "private": true,
   "version": "1.0.0",
   "description": "dt-evals wired to the copilot-chat spans captured by this project",
