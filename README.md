@@ -77,15 +77,37 @@ Microsoft, não este repo: [VS Code — AI settings reference](https://code.visu
 
 1. Suba o collector localmente: `cd collector; podman-compose up -d`
 2. Copie `.env.example` → `.env` e coloque seu `DT_INGEST_TOKEN`
-3. No VS Code, adicione em User Settings ([settings/user-settings.example.jsonc](settings/user-settings.example.jsonc)):
+3. Abra o `settings.json` **global** do seu usuário (não é o `.vscode/settings.json`
+   do projeto) e cole o bloco do OTel no final, dentro das chaves `{ }` existentes.
+
+   **Pelo VS Code** (mais fácil, funciona em qualquer OS):
+   `Cmd+Shift+P` (macOS) ou `Ctrl+Shift+P` (Windows/Linux) → digite **Preferences:
+   Open User Settings (JSON)** → Enter.
+
+   **Direto pelo caminho do arquivo**, se preferir editar por fora:
+   | OS | Caminho |
+   |---|---|
+   | macOS | `~/Library/Application Support/Code/User/settings.json` |
+   | Linux | `~/.config/Code/User/settings.json` |
+   | Windows | `%APPDATA%\Code\User\settings.json` |
+
+   Cole no final do arquivo (mantendo o resto das suas settings intactas, igual ao
+   exemplo em [settings/user-settings.example.jsonc](settings/user-settings.example.jsonc)):
    ```jsonc
    {
+     // ...suas outras settings...,
+
+     // ── OpenTelemetry — Boa Vista POC (Copilot Chat → Dynatrace) ──
      "github.copilot.chat.otel.enabled": true,
-     "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318"
+     "github.copilot.chat.otel.exporterType": "otlp-http",
+     "github.copilot.chat.otel.otlpEndpoint": "http://localhost:4318",
+     "github.copilot.chat.otel.captureContent": false,
+     "github.copilot.chat.otel.maxAttributeSizeChars": 0
    }
    ```
-4. Reload VS Code (Cmd+Shift+P → Reload Window) e use o Copilot Chat normalmente.
-   Rode a DQL de [docs/05-dql-queries.md](docs/05-dql-queries.md) no Dynatrace pra confirmar.
+4. Reload VS Code (`Cmd+Shift+P` → **Developer: Reload Window**) e use o Copilot Chat
+   normalmente. Rode a DQL de [docs/05-dql-queries.md](docs/05-dql-queries.md) no
+   Dynatrace pra confirmar.
 
 Nada disso precisa ser feito de novo no rollout enterprise — o `managed-settings.json`
 (Seção seguinte) sobrescreve essas mesmas chaves automaticamente para os 47 devs.
