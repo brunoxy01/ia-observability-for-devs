@@ -326,7 +326,7 @@
       "title": "Service Health (ok vs erro)",
       "type": "data",
       "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(span.status_code)\n| summarize requests=count(), by:{span.status_code}",
-      "visualization": "donutChart",
+      "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "autoSelectVisualization": false
       },
@@ -371,7 +371,7 @@
       "title": "Requests por modelo ao longo do tempo",
       "type": "data",
       "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries requests=count(), by:{gen_ai.request.model}",
-      "visualization": "lineChart",
+      "visualization": "barChart",
       "visualizationSettings": {
         "autoSelectVisualization": false,
         "chartSettings": {
@@ -594,7 +594,7 @@
       "title": "Tokens ao longo do tempo por modelo",
       "type": "data",
       "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), by:{gen_ai.request.model}",
-      "visualization": "lineChart",
+      "visualization": "barChart",
       "visualizationSettings": {
         "autoSelectVisualization": false,
         "chartSettings": {
@@ -685,7 +685,7 @@
       "title": "Uso por família de modelo",
       "type": "data",
       "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd familia=if(contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\"),\"Claude\",else:if(contains(gen_ai.request.model,\"gpt\"),\"GPT\",else:if(contains(gen_ai.request.model,\"gemini\"),\"Gemini\",else:\"Outros\")))\n| summarize requests=count(), by:{familia}\n| sort requests desc",
-      "visualization": "donutChart",
+      "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "autoSelectVisualization": false
       },
