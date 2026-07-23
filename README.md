@@ -57,7 +57,8 @@ ia-observability-for-devs/
 │   ├── 04-lgpd-privacy.md          Considerações LGPD + captureContent
 │   ├── 05-dql-queries.md           DQL para validar no Notebook
 │   ├── 06-troubleshooting.md       Como debugar (console/file exporter)
-│   └── 07-evaluations.md           Bônus: qualidade das respostas via dt-evals (LLM-as-judge)
+│   ├── 07-evaluations.md           Bônus: qualidade das respostas via dt-evals (LLM-as-judge)
+│   └── 08-getting-started-shared-collector.md  Passo a passo pra conectar num collector já existente
 ├── collector/                      OTel Collector corporativo
 │   ├── compose.yml                 Roda o collector via podman/docker
 │   ├── otel-collector-config.yaml  Config: recebe OTLP, forwarda pro Dynatrace
@@ -79,9 +80,15 @@ ia-observability-for-devs/
 
 ## Quickstart (piloto de 1 dev)
 
-O que o dev precisa fazer, resumido em 4 passos — a lista completa de settings (com
-default, escopo e precedência entre managed/workspace/user) é a doc oficial da
-Microsoft, não este repo: [VS Code — AI settings reference](https://code.visualstudio.com/docs/agents/reference/ai-settings).
+> Já existe um collector compartilhado rodando (fornecido pelo time de plataforma)?
+> Pule direto pro guia [docs/08-getting-started-shared-collector.md](docs/08-getting-started-shared-collector.md) —
+> ele cobre a configuração da IDE, identidade do dev via `~/.zprofile` e as DQL de
+> validação, tudo genérico independente do modelo/ferramenta de IA usado.
+
+O que o dev precisa fazer pra subir o **próprio** collector localmente, resumido em 4
+passos — a lista completa de settings (com default, escopo e precedência entre
+managed/workspace/user) é a doc oficial da Microsoft, não este repo:
+[VS Code — AI settings reference](https://code.visualstudio.com/docs/agents/reference/ai-settings).
 
 1. Suba o collector localmente: `cd collector; podman-compose up -d`
 2. Copie `.env.example` → `.env` e coloque seu `DT_INGEST_TOKEN`
@@ -118,7 +125,7 @@ Microsoft, não este repo: [VS Code — AI settings reference](https://code.visu
    Dynatrace pra confirmar.
 
 Nada disso precisa ser feito de novo no rollout enterprise — o `managed-settings.json`
-(Seção seguinte) sobrescreve essas mesmas chaves automaticamente para os 47 devs.
+(Seção seguinte) sobrescreve essas mesmas chaves automaticamente para todos os devs.
 
 ## Rollout enterprise (recomendado)
 
