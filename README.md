@@ -21,8 +21,11 @@ Cobre os 4 pilares que o cliente solicitou:
 | **Bônus: qualidade** | 🧪 Opcional | LLM-as-judge sobre as respostas do Copilot via [dt-evals](https://github.com/dynatrace-oss/dt-evals) — ver [docs/07-evaluations.md](docs/07-evaluations.md) |
 
 Dashboard recomendado pra importar: [dashboards/developers-ai-usage.json](dashboards/developers-ai-usage.json)
-— visão geral única com os 5 pilares acima. `dashboards/copilot-chat-observability.json`
-continua disponível como versão anterior, por pilar.
+— visão geral única com os 5 pilares acima, **agnóstico de ferramenta** (funciona com
+qualquer client instrumentado via OTel GenAI Semantic Conventions: Copilot Chat, Claude
+Code, Cursor, agente custom, etc. — nenhuma query depende de `service.name` fixo).
+`dashboards/copilot-chat-observability.json` continua disponível como versão anterior,
+específica pro GitHub Copilot Chat.
 
 ## Como funciona
 

@@ -5,7 +5,7 @@
     "0": {
       "type": "markdown",
       "title": "",
-      "content": "# 🤖 Developers AI Usage\n\nVisão geral de uso de IA generativa pelos devs (GitHub Copilot Chat via OpenTelemetry nativo do VS Code) — custo, performance, adoção e qualidade em um único dashboard.\n\n**Fonte:** `service.name == \"copilot-chat\"` · Notebook de origem: [copilot-chat-observability](../notebooks/copilot-chat-observability.md)"
+      "content": "# 🤖 Developers AI Usage\n\nVisão geral de uso de IA generativa pelos devs — custo, performance, adoção e qualidade em um único dashboard, agnóstico de ferramenta.\n\nFunciona com **qualquer cliente instrumentado com OTel GenAI Semantic Conventions** — GitHub Copilot Chat, Claude Code, Cursor, Windsurf, agentes custom, etc. — desde que emita spans `gen_ai.*`. Nenhuma query aqui depende de `service.name` fixo; `gen_ai.provider.name` e `service.name` aparecem como dimensão de quebra pra comparar ferramentas lado a lado.\n\nDocs: [copilot-chat-observability.md](../notebooks/copilot-chat-observability.md) (exemplo de origem, específico pro Copilot) · [OTel GenAI Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/)"
     },
 
     "10": {
@@ -16,7 +16,7 @@
     "11": {
       "type": "data",
       "title": "Chats",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count()",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": { "showLabel": true, "label": "chats", "recordField": "chats", "alignment": "center" }
@@ -25,7 +25,7 @@
     "12": {
       "type": "data",
       "title": "Sessões",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(gen_ai.conversation.id)\n| summarize sessions = countDistinct(gen_ai.conversation.id)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.conversation.id)\n| summarize sessions = countDistinct(gen_ai.conversation.id)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": { "showLabel": true, "label": "sessions", "recordField": "sessions", "alignment": "center" }
@@ -34,7 +34,7 @@
     "13": {
       "type": "data",
       "title": "Devs ativos",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(user.email)\n| summarize devs = countDistinct(user.email)",
+      "query": "fetch spans\n| filter isNotNull(user.email)\n| summarize devs = countDistinct(user.email)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": { "showLabel": true, "label": "devs", "recordField": "devs", "alignment": "center" }
@@ -43,7 +43,7 @@
     "14": {
       "type": "data",
       "title": "Tool calls",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"execute_tool \")\n| summarize tools = count()",
+      "query": "fetch spans\n| filter startsWith(span.name, \"execute_tool \")\n| summarize tools = count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": { "showLabel": true, "label": "tools", "recordField": "tools", "alignment": "center" }
@@ -52,7 +52,7 @@
     "15": {
       "type": "data",
       "title": "Custo estimado (USD)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: if(contains(gen_ai.request.model, \"gpt-4o\"),\n       (inp * 0.0000025) + (out * 0.00001),\n    else: (inp * 0.000002) + (out * 0.00001)))))\n| summarize total = sum(cost_usd)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: if(contains(gen_ai.request.model, \"gpt-4o\"),\n       (inp * 0.0000025) + (out * 0.00001),\n    else: (inp * 0.000002) + (out * 0.00001)))))\n| summarize total = sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": { "showLabel": true, "label": "total", "recordField": "total", "alignment": "center" },
@@ -65,12 +65,12 @@
     "20": {
       "type": "markdown",
       "title": "",
-      "content": "## 💰 FinOps — custo e tokens\n\n> Custo é **estimado** via pricing hardcoded na DQL — ajustar conforme contrato Copilot Business/Enterprise."
+      "content": "## 💰 FinOps — custo e tokens\n\n> Custo é **estimado** via pricing hardcoded na DQL — ajustar pricing/modelos conforme os provedores que sua empresa realmente usa."
     },
     "21": {
       "type": "data",
-      "title": "💰 Custo por modelo (24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: if(contains(gen_ai.request.model, \"gpt-4o\"),\n       (inp * 0.0000025) + (out * 0.00001),\n    else: (inp * 0.000002) + (out * 0.00001)))))\n| summarize cost = sum(cost_usd),\n            input_tokens = sum(inp),\n            output_tokens = sum(out),\n            requests = count()\n  by gen_ai.request.model\n| sort cost desc",
+      "title": "💰 Custo por ferramenta e modelo (24h)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: if(contains(gen_ai.request.model, \"gpt-4o\"),\n       (inp * 0.0000025) + (out * 0.00001),\n    else: (inp * 0.000002) + (out * 0.00001)))))\n| summarize cost = sum(cost_usd),\n            input_tokens = sum(inp),\n            output_tokens = sum(out),\n            requests = count()\n  by:{service.name, gen_ai.provider.name, gen_ai.request.model}\n| sort cost desc",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -81,7 +81,7 @@
     "22": {
       "type": "data",
       "title": "💰 Custo por dev (top 20, 24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(user.email) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: (inp * 0.0000025) + (out * 0.00001))))\n| summarize cost = sum(cost_usd),\n            chats = count(),\n            tokens = sum(inp + out)\n  by dev = coalesce(user.email, user.name), user.team\n| sort cost desc\n| limit 20",
+      "query": "fetch spans\n| filter isNotNull(user.email) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: (inp * 0.0000025) + (out * 0.00001))))\n| summarize cost = sum(cost_usd),\n            chats = count(),\n            tokens = sum(inp + out)\n  by:{dev = coalesce(user.email, user.name), user.team}\n| sort cost desc\n| limit 20",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -92,7 +92,7 @@
     "23": {
       "type": "data",
       "title": "💰 Custo por time (7 dias)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(user.team) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: (inp * 0.0000025) + (out * 0.00001))\n| summarize cost = sum(cost_usd),\n            devs = countDistinct(user.email),\n            chats = count()\n  by user.team\n| sort cost desc",
+      "query": "fetch spans\n| filter isNotNull(user.team) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: (inp * 0.0000025) + (out * 0.00001))\n| summarize cost = sum(cost_usd),\n            devs = countDistinct(user.email),\n            chats = count()\n  by:{user.team}\n| sort cost desc",
       "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "chartSettings": {
@@ -117,8 +117,8 @@
     },
     "31": {
       "type": "data",
-      "title": "⏱️ Latência P50/P95/P99 por modelo (24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| fieldsAdd dur_ms = duration / 1000000\n| summarize p50 = percentile(dur_ms, 50),\n            p95 = percentile(dur_ms, 95),\n            p99 = percentile(dur_ms, 99),\n            requests = count()\n  by gen_ai.request.model\n| sort p95 desc",
+      "title": "⏱️ Latência P50/P95/P99 por ferramenta e modelo (24h)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| fieldsAdd dur_ms = duration / 1000000\n| summarize p50 = percentile(dur_ms, 50),\n            p95 = percentile(dur_ms, 95),\n            p99 = percentile(dur_ms, 99),\n            requests = count()\n  by:{service.name, gen_ai.request.model}\n| sort p95 desc",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -130,8 +130,8 @@
     },
     "32": {
       "type": "data",
-      "title": "❌ Taxa de erro por modelo (24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| summarize total = count(),\n            errors = countIf(status == \"ERROR\")\n  by gen_ai.request.model\n| fieldsAdd error_rate = round(toDouble(errors) / toDouble(total) * 100, 2)\n| sort error_rate desc",
+      "title": "❌ Taxa de erro por ferramenta e modelo (24h)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| summarize total = count(),\n            errors = countIf(status == \"ERROR\")\n  by:{service.name, gen_ai.request.model}\n| fieldsAdd error_rate = round(toDouble(errors) / toDouble(total) * 100, 2)\n| sort error_rate desc",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -141,8 +141,8 @@
     },
     "33": {
       "type": "data",
-      "title": "📈 Chats ao longo do tempo por modelo (6h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| makeTimeseries chats = count(), by:{gen_ai.request.model}, interval:5m",
+      "title": "📈 Chats ao longo do tempo por ferramenta (6h)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| makeTimeseries chats = count(), by:{service.name}, interval:5m",
       "visualization": "lineChart",
       "visualizationSettings": {
         "chartSettings": { "xAxisScaling": "analyzedTimeframe", "gapPolicy": "gap", "curve": "smooth" }
@@ -152,12 +152,12 @@
     "40": {
       "type": "markdown",
       "title": "",
-      "content": "## 🎯 Adoção — modelos, ferramentas, devs"
+      "content": "## 🎯 Adoção — ferramentas, modelos, devs"
     },
     "41": {
       "type": "data",
-      "title": "🧠 Modelos mais usados (7 dias)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count(),\n            devs = countDistinct(user.email),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens))\n  by gen_ai.request.model\n| sort chats desc",
+      "title": "🧰 Ferramentas de IA mais usadas (7 dias)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count(),\n            devs = countDistinct(user.email),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens))\n  by:{service.name}\n| sort chats desc",
       "visualization": "donutChart",
       "visualizationSettings": {
         "chartSettings": {
@@ -167,8 +167,14 @@
     },
     "42": {
       "type": "data",
-      "title": "🔧 Ferramentas mais invocadas (24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"execute_tool \")\n| fieldsAdd tool_name = replaceString(span.name, \"execute_tool \", \"\")\n| fieldsAdd dur_ms = duration / 1000000\n| summarize calls = count(),\n            avg_ms = avg(dur_ms),\n            errors = countIf(status == \"ERROR\")\n  by tool_name\n| sort calls desc\n| limit 15",
+      "title": "🧠 Modelos mais usados (7 dias)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count(),\n            devs = countDistinct(user.email),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens))\n  by:{gen_ai.request.model}\n| sort chats desc\n| limit 15",
+      "visualization": "table"
+    },
+    "43": {
+      "type": "data",
+      "title": "🔧 Tools (function calls) mais invocadas (24h)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"execute_tool \")\n| fieldsAdd tool_name = replaceString(span.name, \"execute_tool \", \"\")\n| fieldsAdd dur_ms = duration / 1000000\n| summarize calls = count(),\n            avg_ms = avg(dur_ms),\n            errors = countIf(status == \"ERROR\")\n  by:{tool_name}\n| sort calls desc\n| limit 15",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -176,28 +182,28 @@
         ]
       }
     },
-    "43": {
-      "type": "data",
-      "title": "🏆 Top 10 devs por consumo (7 dias)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter startsWith(span.name, \"chat \")\n| filter isNotNull(user.email)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            sessions = countDistinct(gen_ai.conversation.id)\n  by user.email, user.name, user.team\n| sort chats desc\n| limit 10",
-      "visualization": "table"
-    },
     "44": {
       "type": "data",
+      "title": "🏆 Top 10 devs por consumo (7 dias)",
+      "query": "fetch spans\n| filter startsWith(span.name, \"chat \")\n| filter isNotNull(user.email)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            sessions = countDistinct(gen_ai.conversation.id),\n            ferramentas = collectDistinct(service.name)\n  by:{user.email, user.name, user.team}\n| sort chats desc\n| limit 10",
+      "visualization": "table"
+    },
+    "45": {
+      "type": "data",
       "title": "🕸️ Agents / sub-agents ativos (24h)",
-      "query": "fetch spans\n| filter service.name == \"copilot-chat\"\n| filter isNotNull(gen_ai.agent.name)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens))\n  by gen_ai.agent.name\n| sort chats desc",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.agent.name)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens))\n  by:{service.name, gen_ai.agent.name}\n| sort chats desc",
       "visualization": "table"
     },
 
     "50": {
       "type": "markdown",
       "title": "",
-      "content": "## 🧪 Evaluations — qualidade das respostas (dt-evals)\n\n> Opcional, requer [`dt-evals`](https://github.com/dynatrace-oss/dt-evals) rodando. Ver [docs/07-evaluations.md](../docs/07-evaluations.md)."
+      "content": "## 🧪 Evaluations — qualidade das respostas (dt-evals)\n\n> Opcional, requer [`dt-evals`](https://github.com/dynatrace-oss/dt-evals) rodando (funciona com qualquer ferramenta de IA, não só Copilot). Ver [docs/07-evaluations.md](../docs/07-evaluations.md)."
     },
     "51": {
       "type": "data",
       "title": "✅ Pass rate por métrica (24h)",
-      "query": "fetch bizevents\n| filter event.type == \"gen_ai.evaluation.result\"\n| summarize evaluations = count(),\n            pass_rate = countIf(gen_ai.evaluation.score.label == \"pass\") * 100.0 / count(),\n            avg_score = avg(gen_ai.evaluation.score.value)\n  by gen_ai.evaluation.name\n| sort pass_rate asc",
+      "query": "fetch bizevents\n| filter event.type == \"gen_ai.evaluation.result\"\n| summarize evaluations = count(),\n            pass_rate = countIf(gen_ai.evaluation.score.label == \"pass\") * 100.0 / count(),\n            avg_score = avg(gen_ai.evaluation.score.value)\n  by:{gen_ai.evaluation.name}\n| sort pass_rate asc",
       "visualization": "table",
       "visualizationSettings": {
         "unitsOverrides": [
@@ -209,39 +215,40 @@
     "90": {
       "type": "markdown",
       "title": "",
-      "content": "## 🔧 Métricas extraídas via OpenPipeline\n\nA regra de **Metric extraction** em `Process and contextualize → OpenPipeline → Spans` já grava `input_tokens`, `output_tokens` e `total_tokens_input` (+ uma cópia) como métricas nativas a partir de `gen_ai.usage.*`. Isso permite trocar os `fetch spans` acima por `timeseries` sobre a métrica (mais barato, sem reprocessar o payload do span a cada consulta).\n\n**⚠️ Pendência conhecida:** confira a condição de cada regra antes de usar essas métricas em produção — `total_tokens_input` está atualmente com a mesma condição de `output_tokens`, e há uma regra duplicada (`total_tokens_input - Copy`). Ajustar nomes/condições no OpenPipeline antes de trocar os tiles acima por `timeseries`."
+      "content": "## 🔧 Métricas extraídas via OpenPipeline\n\nUma regra de **Metric extraction** em `Process and contextualize → OpenPipeline → Spans` pode gravar `input_tokens`, `output_tokens` e `total_tokens` como métricas nativas a partir de `gen_ai.usage.*`, permitindo trocar os `fetch spans` acima por `timeseries` sobre a métrica (mais barato, sem reprocessar o payload do span a cada consulta).\n\n**⚠️ Se você configurar essa regra:** confira a condição de cada métrica antes de usar em produção — é fácil errar a condição/nome (ex: um campo `total_tokens_input` acabar filtrando por `output_tokens`, ou ficar com regras duplicadas). Teste cada métrica isoladamente no Metric Browser antes de trocar os tiles acima por `timeseries`."
     },
 
     "99": {
       "type": "markdown",
       "title": "",
-      "content": "---\n\n### 📖 Como esses dados chegam aqui\n\n1. **VS Code Copilot Chat** emite OTel spans (`invoke_agent`, `chat`, `execute_tool`)\n2. Spans são enviados via OTLP HTTP para um **OTel Collector**\n3. Collector adiciona autenticação e forwarda para o **Dynatrace**\n4. **OpenPipeline** processa e extrai métricas de token a partir dos spans\n5. Este dashboard consulta via DQL — (Opcional) **dt-evals** grava scores de qualidade como bizevents\n\nDocumentação: [Monitor agent usage with OpenTelemetry (VS Code Docs)](https://code.visualstudio.com/docs/agents/guides/monitoring-agents) · [AI settings reference](https://code.visualstudio.com/docs/agents/reference/ai-settings) · [dt-evals (GitHub)](https://github.com/dynatrace-oss/dt-evals)"
+      "content": "---\n\n### 📖 Como esses dados chegam aqui\n\n1. **Ferramenta de IA do dev** (Copilot Chat, Claude Code, Cursor, agente custom, ...) emite OTel spans (`invoke_agent`, `chat`, `execute_tool`) seguindo as **OTel GenAI Semantic Conventions**\n2. Spans são enviados via OTLP HTTP para um **OTel Collector**\n3. Collector adiciona autenticação e forwarda para o **Dynatrace**\n4. (Opcional) **OpenPipeline** processa e extrai métricas de token a partir dos spans\n5. Este dashboard consulta via DQL — (Opcional) **dt-evals** grava scores de qualidade como bizevents\n\nDocumentação: [OTel GenAI Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/) · [VS Code — Monitor agent usage with OpenTelemetry](https://code.visualstudio.com/docs/agents/guides/monitoring-agents) · [dt-evals (GitHub)](https://github.com/dynatrace-oss/dt-evals)"
     }
   },
   "layouts": {
-    "0":  { "x": 0,  "y": 0,  "w": 24, "h": 3 },
-    "10": { "x": 0,  "y": 3,  "w": 24, "h": 1 },
-    "11": { "x": 0,  "y": 4,  "w": 5,  "h": 4 },
-    "12": { "x": 5,  "y": 4,  "w": 5,  "h": 4 },
-    "13": { "x": 10, "y": 4,  "w": 5,  "h": 4 },
-    "14": { "x": 15, "y": 4,  "w": 5,  "h": 4 },
-    "15": { "x": 20, "y": 4,  "w": 4,  "h": 4 },
-    "20": { "x": 0,  "y": 8,  "w": 24, "h": 2 },
-    "21": { "x": 0,  "y": 10, "w": 12, "h": 6 },
-    "22": { "x": 12, "y": 10, "w": 12, "h": 6 },
-    "23": { "x": 0,  "y": 16, "w": 24, "h": 6 },
-    "30": { "x": 0,  "y": 22, "w": 24, "h": 2 },
-    "31": { "x": 0,  "y": 24, "w": 12, "h": 6 },
-    "32": { "x": 12, "y": 24, "w": 12, "h": 6 },
-    "33": { "x": 0,  "y": 30, "w": 24, "h": 6 },
-    "40": { "x": 0,  "y": 36, "w": 24, "h": 2 },
-    "41": { "x": 0,  "y": 38, "w": 8,  "h": 7 },
-    "42": { "x": 8,  "y": 38, "w": 8,  "h": 7 },
-    "43": { "x": 16, "y": 38, "w": 8,  "h": 7 },
-    "44": { "x": 0,  "y": 45, "w": 24, "h": 6 },
-    "50": { "x": 0,  "y": 51, "w": 24, "h": 2 },
-    "51": { "x": 0,  "y": 53, "w": 24, "h": 6 },
-    "90": { "x": 0,  "y": 59, "w": 24, "h": 3 },
-    "99": { "x": 0,  "y": 62, "w": 24, "h": 4 }
+    "0":  { "x": 0,  "y": 0,  "w": 24, "h": 4 },
+    "10": { "x": 0,  "y": 4,  "w": 24, "h": 1 },
+    "11": { "x": 0,  "y": 5,  "w": 5,  "h": 4 },
+    "12": { "x": 5,  "y": 5,  "w": 5,  "h": 4 },
+    "13": { "x": 10, "y": 5,  "w": 5,  "h": 4 },
+    "14": { "x": 15, "y": 5,  "w": 5,  "h": 4 },
+    "15": { "x": 20, "y": 5,  "w": 4,  "h": 4 },
+    "20": { "x": 0,  "y": 9,  "w": 24, "h": 2 },
+    "21": { "x": 0,  "y": 11, "w": 24, "h": 6 },
+    "22": { "x": 0,  "y": 17, "w": 12, "h": 6 },
+    "23": { "x": 12, "y": 17, "w": 12, "h": 6 },
+    "30": { "x": 0,  "y": 23, "w": 24, "h": 2 },
+    "31": { "x": 0,  "y": 25, "w": 12, "h": 6 },
+    "32": { "x": 12, "y": 25, "w": 12, "h": 6 },
+    "33": { "x": 0,  "y": 31, "w": 24, "h": 6 },
+    "40": { "x": 0,  "y": 37, "w": 24, "h": 2 },
+    "41": { "x": 0,  "y": 39, "w": 8,  "h": 7 },
+    "42": { "x": 8,  "y": 39, "w": 8,  "h": 7 },
+    "43": { "x": 16, "y": 39, "w": 8,  "h": 7 },
+    "44": { "x": 0,  "y": 46, "w": 12, "h": 6 },
+    "45": { "x": 12, "y": 46, "w": 12, "h": 6 },
+    "50": { "x": 0,  "y": 52, "w": 24, "h": 2 },
+    "51": { "x": 0,  "y": 54, "w": 24, "h": 6 },
+    "90": { "x": 0,  "y": 60, "w": 24, "h": 3 },
+    "99": { "x": 0,  "y": 63, "w": 24, "h": 4 }
   }
 }
