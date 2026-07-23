@@ -41,7 +41,7 @@
   "tiles": {
     "0": {
       "type": "markdown",
-      "content": "# 🤖 Developers AI Usage\n\nConsumo de IA generativa pelos desenvolvedores — custo, performance e adoção, por modelo/família. `gcp.vertex_ai` é dado de demonstração; `github` é uso real de Copilot. Fonte: spans OTel GenAI (`gen_ai.*`).",
+      "content": "# 🤖 Developers AI Usage\n\nConsumo de IA generativa pelos desenvolvedores — **custo, performance e adoção**, por modelo/família. Filtros **Provider** e **Modelo** no topo (`github` = uso real de Copilot; `gcp.vertex_ai` = dado de demonstração). Fonte: spans OTel GenAI (`gen_ai.*`).",
       "title": ""
     },
     "10": {
@@ -52,7 +52,7 @@
     "11": {
       "title": "Custo estimado (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -92,7 +92,7 @@
     "12": {
       "title": "Requests",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| summarize requests=count()",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -119,7 +119,7 @@
     "13": {
       "title": "Sessões",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter isNotNull(gen_ai.conversation.id)\n| summarize sessions=countDistinct(gen_ai.conversation.id)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.conversation.id)\n| summarize sessions=countDistinct(gen_ai.conversation.id)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -146,7 +146,7 @@
     "14": {
       "title": "Devs ativos",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter isNotNull(user.email)\n| summarize devs=countDistinct(user.email)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.email)\n| summarize devs=countDistinct(user.email)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -173,7 +173,7 @@
     "15": {
       "title": "Modelos",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| summarize modelos=countDistinct(gen_ai.request.model)",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize modelos=countDistinct(gen_ai.request.model)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -181,6 +181,326 @@
           "isIconVisible": true,
           "recordField": "modelos",
           "prefixIcon": "AiIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "60": {
+      "type": "markdown",
+      "content": "### ⚡ Performance & saúde do serviço",
+      "title": ""
+    },
+    "61": {
+      "title": "AVG Request Duration",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.operation.name == \"chat\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize avg_dur=avg(duration)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "avg_dur",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "avg_dur",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "62": {
+      "title": "P99 Request Duration",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.operation.name == \"chat\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p99=percentile(duration,99)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "p99",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "p99",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "63": {
+      "title": "Taxa de erro",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize total=count(), errors=countIf(span.status_code==\"error\")\n| fieldsAdd error_rate=round(toDouble(errors)/toDouble(total)*100, decimals:2)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "error_rate",
+          "prefixIcon": "ErrorIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "error_rate",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "64": {
+      "title": "Service Health (ok vs erro)",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(span.status_code)\n| summarize requests=count(), by:{span.status_code}",
+      "visualization": "donutChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "65": {
+      "title": "Response Time por modelo (avg)",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.operation.name == \"chat\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries avg_dur=avg(duration), by:{gen_ai.request.model}",
+      "visualization": "lineChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "chartSettings": {
+          "gapPolicy": "connect"
+        }
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "66": {
+      "title": "Requests por modelo ao longo do tempo",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries requests=count(), by:{gen_ai.request.model}",
+      "visualization": "lineChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "chartSettings": {
+          "gapPolicy": "connect"
+        }
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "70": {
+      "type": "markdown",
+      "content": "### 🧠 Prompt caching\n\n> Disponível onde a ferramenta reporta `gen_ai.usage.cache_read.input_tokens` (hoje, principalmente Copilot).",
+      "title": ""
+    },
+    "71": {
+      "title": "AVG Cache Read Tokens",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.cache_read.input_tokens)\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd cin=toDouble(gen_ai.usage.cache_read.input_tokens)\n| summarize avg_cache=avg(cin)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "avg_cache",
+          "prefixIcon": "DiskIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "72": {
+      "title": "Cache Hit",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.cache_read.input_tokens)\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd cin=toDouble(gen_ai.usage.cache_read.input_tokens), inp=toDouble(gen_ai.usage.input_tokens)\n| summarize cr=sum(cin), i=sum(inp)\n| fieldsAdd hit_pct=round(cr/i*100, decimals:2)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "hit_pct",
+          "prefixIcon": "CheckmarkIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "hit_pct",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "73": {
+      "title": "Requests c/ cache",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.cache_read.input_tokens)\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "74": {
+      "title": "Tokens em cache (total)",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.usage.cache_read.input_tokens)\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.cache_read.input_tokens))",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "tokens",
+          "prefixIcon": "DiskIcon"
         },
         "autoSelectVisualization": false
       },
@@ -205,7 +525,7 @@
     "21": {
       "title": "Custo por modelo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{gen_ai.request.model}\n| sort cost desc",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{gen_ai.request.model}\n| sort cost desc",
       "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "autoSelectVisualization": false,
@@ -239,7 +559,7 @@
     "22": {
       "title": "Custo por time (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{user.team}\n| sort cost desc",
+      "query": "fetch spans\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{user.team}\n| sort cost desc",
       "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "autoSelectVisualization": false,
@@ -273,7 +593,7 @@
     "23": {
       "title": "Tokens ao longo do tempo por modelo",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| makeTimeseries tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), by:{gen_ai.request.model}",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), by:{gen_ai.request.model}",
       "visualization": "lineChart",
       "visualizationSettings": {
         "autoSelectVisualization": false,
@@ -297,7 +617,7 @@
     "24": {
       "title": "Top devs por custo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.email)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), tokens=sum(toLong(inp+out)), requests=count(), by:{user.email, user.team}\n| sort cost desc\n| limit 20",
+      "query": "fetch spans\n| filter isNotNull(user.email)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), tokens=sum(toLong(inp+out)), requests=count(), by:{user.email, user.team}\n| sort cost desc\n| limit 20",
       "visualization": "table",
       "visualizationSettings": {},
       "querySettings": {
@@ -315,13 +635,13 @@
     },
     "30": {
       "type": "markdown",
-      "content": "### ⚙️ SRE — performance",
+      "content": "### ⚙️ SRE — latência detalhada",
       "title": ""
     },
     "31": {
       "title": "Latência por modelo (p50/p95)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| summarize p50=percentile(duration,50), p95=percentile(duration,95), requests=count(), by:{gen_ai.request.model}\n| sort p95 desc",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p50=percentile(duration,50), p95=percentile(duration,95), requests=count(), by:{gen_ai.request.model}\n| sort p95 desc",
       "visualization": "table",
       "visualizationSettings": {},
       "querySettings": {
@@ -338,16 +658,11 @@
       }
     },
     "32": {
-      "title": "Tempo de resposta ao longo do tempo (p90)",
+      "title": "Erros por modelo",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| makeTimeseries p90=percentile(duration,90), by:{gen_ai.request.model}",
-      "visualization": "lineChart",
-      "visualizationSettings": {
-        "autoSelectVisualization": false,
-        "chartSettings": {
-          "gapPolicy": "connect"
-        }
-      },
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize total=count(), errors=countIf(span.status_code==\"error\"), by:{gen_ai.request.model}\n| fieldsAdd error_rate=round(toDouble(errors)/toDouble(total)*100, decimals:2)\n| sort error_rate desc",
+      "visualization": "table",
+      "visualizationSettings": {},
       "querySettings": {
         "maxResultRecords": 1000,
         "defaultScanLimitGbytes": 500,
@@ -369,7 +684,7 @@
     "41": {
       "title": "Uso por família de modelo",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| fieldsAdd familia=if(contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\"),\"Claude\",else:if(contains(gen_ai.request.model,\"gpt\"),\"GPT\",else:if(contains(gen_ai.request.model,\"gemini\"),\"Gemini\",else:\"Outros\")))\n| summarize requests=count(), by:{familia}\n| sort requests desc",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd familia=if(contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\"),\"Claude\",else:if(contains(gen_ai.request.model,\"gpt\"),\"GPT\",else:if(contains(gen_ai.request.model,\"gemini\"),\"Gemini\",else:\"Outros\")))\n| summarize requests=count(), by:{familia}\n| sort requests desc",
       "visualization": "donutChart",
       "visualizationSettings": {
         "autoSelectVisualization": false
@@ -390,7 +705,7 @@
     "42": {
       "title": "Uso por time",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| summarize requests=count(), by:{user.team}\n| sort requests desc",
+      "query": "fetch spans\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count(), by:{user.team}\n| sort requests desc",
       "visualization": "categoricalBarChart",
       "visualizationSettings": {
         "autoSelectVisualization": false
@@ -411,7 +726,7 @@
     "43": {
       "title": "Top devs por consumo",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter isNotNull(user.email)\n| summarize requests=count(), tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), sessions=countDistinct(gen_ai.conversation.id), by:{user.email, user.team}\n| sort requests desc\n| limit 10",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.email)\n| summarize requests=count(), tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), sessions=countDistinct(gen_ai.conversation.id), by:{user.email, user.team}\n| sort requests desc\n| limit 10",
       "visualization": "table",
       "visualizationSettings": {},
       "querySettings": {
@@ -483,7 +798,7 @@
     "Claude_cost": {
       "title": "Custo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -523,7 +838,7 @@
     "Claude_req": {
       "title": "Requests",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| summarize requests=count()",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -550,7 +865,7 @@
     "Claude_tok": {
       "title": "Tokens",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -577,23 +892,23 @@
     "Claude_lat": {
       "title": "Tempo médio resp.",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| summarize p90=percentile(duration,90)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.operation.name==\"chat\"\n| summarize avg_dur=avg(duration)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
           "labelMode": "none",
           "isIconVisible": true,
-          "recordField": "p90",
+          "recordField": "avg_dur",
           "prefixIcon": "DurationIcon"
         },
         "autoSelectVisualization": false,
         "unitsOverrides": [
           {
-            "identifier": "p90",
+            "identifier": "avg_dur",
             "unitCategory": "time",
             "baseUnit": "nanosecond",
             "displayUnit": null,
-            "decimals": 1,
+            "decimals": 2,
             "suffix": "",
             "delimiter": false,
             "cascade": null,
@@ -665,7 +980,7 @@
     "GPT_cost": {
       "title": "Custo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gpt\")\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -705,7 +1020,7 @@
     "GPT_req": {
       "title": "Requests",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gpt\")\n| summarize requests=count()",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -732,7 +1047,7 @@
     "GPT_tok": {
       "title": "Tokens",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gpt\")\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -759,23 +1074,23 @@
     "GPT_lat": {
       "title": "Tempo médio resp.",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gpt\")\n| summarize p90=percentile(duration,90)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.operation.name==\"chat\"\n| summarize avg_dur=avg(duration)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
           "labelMode": "none",
           "isIconVisible": true,
-          "recordField": "p90",
+          "recordField": "avg_dur",
           "prefixIcon": "DurationIcon"
         },
         "autoSelectVisualization": false,
         "unitsOverrides": [
           {
-            "identifier": "p90",
+            "identifier": "avg_dur",
             "unitCategory": "time",
             "baseUnit": "nanosecond",
             "displayUnit": null,
-            "decimals": 1,
+            "decimals": 2,
             "suffix": "",
             "delimiter": false,
             "cascade": null,
@@ -847,7 +1162,7 @@
     "Gemini_cost": {
       "title": "Custo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gemini\")\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -887,7 +1202,7 @@
     "Gemini_req": {
       "title": "Requests",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gemini\")\n| summarize requests=count()",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -914,7 +1229,7 @@
     "Gemini_tok": {
       "title": "Tokens",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gemini\")\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -941,23 +1256,23 @@
     "Gemini_lat": {
       "title": "Tempo médio resp.",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter contains(gen_ai.request.model,\"gemini\")\n| summarize p90=percentile(duration,90)",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.operation.name==\"chat\"\n| summarize avg_dur=avg(duration)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
           "labelMode": "none",
           "isIconVisible": true,
-          "recordField": "p90",
+          "recordField": "avg_dur",
           "prefixIcon": "DurationIcon"
         },
         "autoSelectVisualization": false,
         "unitsOverrides": [
           {
-            "identifier": "p90",
+            "identifier": "avg_dur",
             "unitCategory": "time",
             "baseUnit": "nanosecond",
             "displayUnit": null,
-            "decimals": 1,
+            "decimals": 2,
             "suffix": "",
             "delimiter": false,
             "cascade": null,
@@ -1029,7 +1344,7 @@
     "Copilot_cost": {
       "title": "Custo (USD)",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.provider.name==\"github\"\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -1069,7 +1384,7 @@
     "Copilot_req": {
       "title": "Requests",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.provider.name==\"github\"\n| summarize requests=count()",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -1096,7 +1411,7 @@
     "Copilot_tok": {
       "title": "Tokens",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.provider.name==\"github\"\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
@@ -1123,23 +1438,23 @@
     "Copilot_lat": {
       "title": "Tempo médio resp.",
       "type": "data",
-      "query": "fetch spans\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.provider.name==\"github\"\n| summarize p90=percentile(duration,90)",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter gen_ai.operation.name==\"chat\"\n| summarize avg_dur=avg(duration)",
       "visualization": "singleValue",
       "visualizationSettings": {
         "singleValue": {
           "labelMode": "none",
           "isIconVisible": true,
-          "recordField": "p90",
+          "recordField": "avg_dur",
           "prefixIcon": "DurationIcon"
         },
         "autoSelectVisualization": false,
         "unitsOverrides": [
           {
-            "identifier": "p90",
+            "identifier": "avg_dur",
             "unitCategory": "time",
             "baseUnit": "nanosecond",
             "displayUnit": null,
-            "decimals": 1,
+            "decimals": 2,
             "suffix": "",
             "delimiter": false,
             "cascade": null,
@@ -1204,225 +1519,297 @@
       "w": 4,
       "h": 3
     },
-    "20": {
+    "60": {
       "x": 0,
       "y": 6,
       "w": 24,
       "h": 1
     },
-    "21": {
+    "61": {
       "x": 0,
       "y": 7,
+      "w": 6,
+      "h": 4
+    },
+    "62": {
+      "x": 6,
+      "y": 7,
+      "w": 6,
+      "h": 4
+    },
+    "63": {
+      "x": 12,
+      "y": 7,
+      "w": 6,
+      "h": 4
+    },
+    "64": {
+      "x": 18,
+      "y": 7,
+      "w": 6,
+      "h": 4
+    },
+    "65": {
+      "x": 0,
+      "y": 11,
+      "w": 12,
+      "h": 6
+    },
+    "66": {
+      "x": 12,
+      "y": 11,
+      "w": 12,
+      "h": 6
+    },
+    "70": {
+      "x": 0,
+      "y": 17,
+      "w": 24,
+      "h": 1
+    },
+    "71": {
+      "x": 0,
+      "y": 18,
+      "w": 6,
+      "h": 4
+    },
+    "72": {
+      "x": 6,
+      "y": 18,
+      "w": 6,
+      "h": 4
+    },
+    "73": {
+      "x": 12,
+      "y": 18,
+      "w": 6,
+      "h": 4
+    },
+    "74": {
+      "x": 18,
+      "y": 18,
+      "w": 6,
+      "h": 4
+    },
+    "20": {
+      "x": 0,
+      "y": 22,
+      "w": 24,
+      "h": 1
+    },
+    "21": {
+      "x": 0,
+      "y": 23,
       "w": 12,
       "h": 6
     },
     "22": {
       "x": 12,
-      "y": 7,
+      "y": 23,
       "w": 12,
       "h": 6
     },
     "23": {
       "x": 0,
-      "y": 13,
+      "y": 29,
       "w": 12,
       "h": 6
     },
     "24": {
       "x": 12,
-      "y": 13,
+      "y": 29,
       "w": 12,
       "h": 6
     },
     "30": {
       "x": 0,
-      "y": 19,
+      "y": 35,
       "w": 24,
       "h": 1
     },
     "31": {
       "x": 0,
-      "y": 20,
+      "y": 36,
       "w": 12,
       "h": 6
     },
     "32": {
       "x": 12,
-      "y": 20,
+      "y": 36,
       "w": 12,
       "h": 6
     },
     "40": {
       "x": 0,
-      "y": 26,
+      "y": 42,
       "w": 24,
       "h": 1
     },
     "41": {
       "x": 0,
-      "y": 27,
+      "y": 43,
       "w": 8,
       "h": 6
     },
     "42": {
       "x": 8,
-      "y": 27,
+      "y": 43,
       "w": 8,
       "h": 6
     },
     "43": {
       "x": 16,
-      "y": 27,
+      "y": 43,
       "w": 8,
       "h": 6
     },
     "50": {
       "x": 0,
-      "y": 33,
+      "y": 49,
       "w": 24,
       "h": 1
     },
     "Claude_logo": {
       "x": 0,
-      "y": 34,
+      "y": 50,
       "w": 6,
       "h": 3
     },
     "Claude_hdr": {
       "x": 0,
-      "y": 37,
+      "y": 53,
       "w": 6,
       "h": 2
     },
     "Claude_cost": {
       "x": 0,
-      "y": 39,
+      "y": 55,
       "w": 6,
       "h": 3
     },
     "Claude_req": {
       "x": 0,
-      "y": 42,
+      "y": 58,
       "w": 6,
       "h": 3
     },
     "Claude_tok": {
       "x": 0,
-      "y": 45,
+      "y": 61,
       "w": 6,
       "h": 3
     },
     "Claude_lat": {
       "x": 0,
-      "y": 48,
+      "y": 64,
       "w": 6,
       "h": 3
     },
     "GPT_logo": {
       "x": 6,
-      "y": 34,
+      "y": 50,
       "w": 6,
       "h": 3
     },
     "GPT_hdr": {
       "x": 6,
-      "y": 37,
+      "y": 53,
       "w": 6,
       "h": 2
     },
     "GPT_cost": {
       "x": 6,
-      "y": 39,
+      "y": 55,
       "w": 6,
       "h": 3
     },
     "GPT_req": {
       "x": 6,
-      "y": 42,
+      "y": 58,
       "w": 6,
       "h": 3
     },
     "GPT_tok": {
       "x": 6,
-      "y": 45,
+      "y": 61,
       "w": 6,
       "h": 3
     },
     "GPT_lat": {
       "x": 6,
-      "y": 48,
+      "y": 64,
       "w": 6,
       "h": 3
     },
     "Gemini_logo": {
       "x": 12,
-      "y": 34,
+      "y": 50,
       "w": 6,
       "h": 3
     },
     "Gemini_hdr": {
       "x": 12,
-      "y": 37,
+      "y": 53,
       "w": 6,
       "h": 2
     },
     "Gemini_cost": {
       "x": 12,
-      "y": 39,
+      "y": 55,
       "w": 6,
       "h": 3
     },
     "Gemini_req": {
       "x": 12,
-      "y": 42,
+      "y": 58,
       "w": 6,
       "h": 3
     },
     "Gemini_tok": {
       "x": 12,
-      "y": 45,
+      "y": 61,
       "w": 6,
       "h": 3
     },
     "Gemini_lat": {
       "x": 12,
-      "y": 48,
+      "y": 64,
       "w": 6,
       "h": 3
     },
     "Copilot_logo": {
       "x": 18,
-      "y": 34,
+      "y": 50,
       "w": 6,
       "h": 3
     },
     "Copilot_hdr": {
       "x": 18,
-      "y": 37,
+      "y": 53,
       "w": 6,
       "h": 2
     },
     "Copilot_cost": {
       "x": 18,
-      "y": 39,
+      "y": 55,
       "w": 6,
       "h": 3
     },
     "Copilot_req": {
       "x": 18,
-      "y": 42,
+      "y": 58,
       "w": 6,
       "h": 3
     },
     "Copilot_tok": {
       "x": 18,
-      "y": 45,
+      "y": 61,
       "w": 6,
       "h": 3
     },
     "Copilot_lat": {
       "x": 18,
-      "y": 48,
+      "y": 64,
       "w": 6,
       "h": 3
     }
