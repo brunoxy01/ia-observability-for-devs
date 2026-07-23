@@ -1,133 +1,1429 @@
 {
-  "version": 18,
-  "variables": [],
+  "version": 21,
+  "variables": [
+    {
+      "key": "Provider",
+      "visible": true,
+      "type": "query",
+      "version": 2,
+      "editable": true,
+      "input": "fetch spans\n| filter isNotNull(gen_ai.provider.name)\n| summarize by:{gen_ai.provider.name}\n| fields gen_ai.provider.name",
+      "multiple": true,
+      "defaultValue": [
+        "3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"
+      ]
+    },
+    {
+      "key": "Modelo",
+      "visible": true,
+      "type": "query",
+      "version": 2,
+      "editable": true,
+      "input": "fetch spans\n| filter isNotNull(gen_ai.request.model)\n| summarize by:{gen_ai.request.model}\n| fields gen_ai.request.model",
+      "multiple": true,
+      "defaultValue": [
+        "3420b2ac-f1cf-4b24-b62d-61ba1ba8ed05*"
+      ]
+    }
+  ],
   "tiles": {
     "0": {
       "type": "markdown",
-      "title": "",
-      "content": "# 🤖 Developers AI Usage\n\nVisão geral de uso de IA generativa pelos devs — custo, performance e adoção, agnóstico de ferramenta e modelo. Cada query abaixo é idêntica às validadas no notebook [copilot-chat-observability.md](../notebooks/copilot-chat-observability.md), só com o timeframe fixo em vez de herdar do dashboard, pra reduzir chance de erro de schema. Se algum tile ainda aparecer quebrado, copie a query do título e cole direto em **Add tile → Data → DQL** — ela é a mesma que já roda no Notebook."
+      "content": "# 🤖 Developers AI Usage\n\nConsumo de IA generativa pelos desenvolvedores — custo, performance e adoção, por modelo/família. Use os filtros **Provider** e **Modelo** no topo (ex.: Provider = `github` para uso real de Copilot; `gcp.vertex_ai` é dado de demonstração). Fonte: spans OTel GenAI (`gen_ai.*`).",
+      "title": ""
     },
-
     "10": {
       "type": "markdown",
-      "title": "",
-      "content": "## 🩺 Sanity check + volume (24h)"
+      "content": "### 📊 Visão geral",
+      "title": ""
     },
     "11": {
+      "title": "Custo estimado (USD)",
       "type": "data",
-      "title": "Sanity check — spans por serviço/agente",
-      "query": "fetch spans, from:now()-1h\n| filter isNotNull(gen_ai.request.model)\n| summarize spans = count(), devs = countDistinct(user.email), by:{service.name, gen_ai.agent.name}\n| sort spans desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "total",
+          "prefixIcon": "MoneyIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "total",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
     "12": {
+      "title": "Requests",
       "type": "data",
-      "title": "Volume — chats, tools, sessões",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(gen_ai.request.model)\n| summarize chats = countIf(startsWith(span.name, \"chat \")),\n            tools = countIf(startsWith(span.name, \"execute_tool \")),\n            sessions = countDistinct(gen_ai.conversation.id)",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
-
+    "13": {
+      "title": "Sessões",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(gen_ai.conversation.id)\n| summarize sessions=countDistinct(gen_ai.conversation.id)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "sessions",
+          "prefixIcon": "BubbleChartIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "14": {
+      "title": "Devs ativos",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.email)\n| summarize devs=countDistinct(user.email)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "devs",
+          "prefixIcon": "UserIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "15": {
+      "title": "Modelos",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize modelos=countDistinct(gen_ai.request.model)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "modelos",
+          "prefixIcon": "AiIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
     "20": {
       "type": "markdown",
-      "title": "",
-      "content": "## 💰 FinOps — custo e tokens\n\n> Custo estimado via pricing hardcoded na DQL — ajuste conforme os provedores reais que sua empresa usa."
+      "content": "### 💰 FinOps — custo e tokens",
+      "title": ""
     },
     "21": {
+      "title": "Custo por modelo (USD)",
       "type": "data",
-      "title": "Custo total por modelo (24h)",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: if(contains(gen_ai.request.model, \"gpt-4o\"),\n       (inp * 0.0000025) + (out * 0.00001),\n    else: (inp * 0.000002) + (out * 0.00001)))))\n| summarize total_cost = sum(cost_usd),\n            input_tokens = sum(inp),\n            output_tokens = sum(out),\n            requests = count(),\n            by:{gen_ai.request.model}\n| sort total_cost desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{gen_ai.request.model}\n| sort cost desc",
+      "visualization": "categoricalBarChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "cost",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
     "22": {
+      "title": "Custo por time (USD)",
       "type": "data",
-      "title": "Custo por dev (top 20, 24h)",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(user.email) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: if(contains(gen_ai.request.model, \"claude\"),\n       (inp * 0.000003) + (out * 0.000015),\n    else: (inp * 0.0000025) + (out * 0.00001))))\n| summarize cost_usd = sum(cost_usd),\n            tokens = sum(inp + out),\n            chats = count(),\n            by:{user.email, user.name, user.team}\n| sort cost_usd desc\n| limit 20",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), by:{user.team}\n| sort cost desc",
+      "visualization": "categoricalBarChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "cost",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
     "23": {
+      "title": "Tokens ao longo do tempo por modelo",
       "type": "data",
-      "title": "Custo por time (7 dias)",
-      "query": "fetch spans, from:now()-7d\n| filter isNotNull(user.team) and isNotNull(gen_ai.usage.input_tokens)\n| fieldsAdd inp = toDouble(gen_ai.usage.input_tokens)\n| fieldsAdd out = toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd =\n    if(contains(gen_ai.request.model, \"opus\"),\n       (inp * 0.000015) + (out * 0.000075),\n    else: if(contains(gen_ai.request.model, \"mini\"),\n       (inp * 0.00000015) + (out * 0.0000006),\n    else: (inp * 0.0000025) + (out * 0.00001)))\n| summarize cost_usd = sum(cost_usd),\n            devs = countDistinct(user.email),\n            chats = count(),\n            by:{user.team}\n| sort cost_usd desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), by:{gen_ai.request.model}",
+      "visualization": "lineChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "chartSettings": {
+          "gapPolicy": "connect"
+        }
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
-
+    "24": {
+      "title": "Top devs por custo (USD)",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(user.email)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize cost=sum(cost_usd), tokens=sum(toLong(inp+out)), requests=count(), by:{user.email, user.team}\n| sort cost desc\n| limit 20",
+      "visualization": "table",
+      "visualizationSettings": {},
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
     "30": {
       "type": "markdown",
-      "title": "",
-      "content": "## ⚙️ SRE — performance"
+      "content": "### ⚙️ SRE — performance",
+      "title": ""
     },
     "31": {
+      "title": "Latência por modelo (p50/p95)",
       "type": "data",
-      "title": "Latência P50/P95/P99 por modelo (24h)",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(gen_ai.request.model)\n| filter startsWith(span.name, \"chat \")\n| fieldsAdd dur_ms = duration / 1000000\n| summarize p50 = percentile(dur_ms, 50),\n            p95 = percentile(dur_ms, 95),\n            p99 = percentile(dur_ms, 99),\n            avg_ms = avg(dur_ms),\n            requests = count(),\n            by:{gen_ai.request.model}\n| sort p95 desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p50=percentile(duration,50), p95=percentile(duration,95), requests=count(), by:{gen_ai.request.model}\n| sort p95 desc",
+      "visualization": "table",
+      "visualizationSettings": {},
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
-
+    "32": {
+      "title": "Tempo de resposta ao longo do tempo (p90)",
+      "type": "data",
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| makeTimeseries p90=percentile(duration,90), by:{gen_ai.request.model}",
+      "visualization": "lineChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false,
+        "chartSettings": {
+          "gapPolicy": "connect"
+        }
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
     "40": {
       "type": "markdown",
-      "title": "",
-      "content": "## 🎯 Adoção — modelos, agentes, devs"
+      "content": "### 🎯 Adoção — modelos, times, devs",
+      "title": ""
     },
     "41": {
+      "title": "Uso por família de modelo",
       "type": "data",
-      "title": "Modelos mais usados (7 dias)",
-      "query": "fetch spans, from:now()-7d\n| filter isNotNull(gen_ai.request.model)\n| filter startsWith(span.name, \"chat \")\n| summarize chats = count(),\n            devs = countDistinct(user.email),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            by:{gen_ai.request.model}\n| sort chats desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd familia=if(contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\"),\"Claude\",else:if(contains(gen_ai.request.model,\"gpt\"),\"GPT\",else:if(contains(gen_ai.request.model,\"gemini\"),\"Gemini\",else:\"Outros\")))\n| summarize requests=count(), by:{familia}\n| sort requests desc",
+      "visualization": "donutChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
     "42": {
+      "title": "Uso por time",
       "type": "data",
-      "title": "Agents / sub-agents ativos (24h)",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(gen_ai.agent.name)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            by:{gen_ai.agent.name}\n| sort chats desc",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(user.team)\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count(), by:{user.team}\n| sort requests desc",
+      "visualization": "categoricalBarChart",
+      "visualizationSettings": {
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
     "43": {
+      "title": "Top devs por consumo",
       "type": "data",
-      "title": "Top 10 devs por consumo (7 dias)",
-      "query": "fetch spans, from:now()-7d\n| filter isNotNull(gen_ai.request.model)\n| filter startsWith(span.name, \"chat \")\n| filter isNotNull(user.email)\n| summarize chats = count(),\n            tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            sessions = countDistinct(gen_ai.conversation.id),\n            by:{user.email, user.name, user.team}\n| sort chats desc\n| limit 10",
-      "visualization": "table"
+      "query": "fetch spans\n| filter isNotNull(gen_ai.request.model) and not(contains(gen_ai.request.model,\"embedding\")) and not(contains(gen_ai.request.model,\"metis\"))\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| filter isNotNull(user.email)\n| summarize requests=count(), tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens)), sessions=countDistinct(gen_ai.conversation.id), by:{user.email, user.team}\n| sort requests desc\n| limit 10",
+      "visualization": "table",
+      "visualizationSettings": {},
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     },
-    "44": {
-      "type": "data",
-      "title": "Sessões — top conversas por consumo (24h)",
-      "query": "fetch spans, from:now()-24h\n| filter isNotNull(gen_ai.conversation.id)\n| summarize chats = count(),\n            total_tokens = sum(toLong(gen_ai.usage.input_tokens) + toLong(gen_ai.usage.output_tokens)),\n            by:{gen_ai.conversation.id, user.email}\n| sort total_tokens desc\n| limit 10",
-      "visualization": "table"
-    },
-
     "50": {
       "type": "markdown",
-      "title": "",
-      "content": "## 🧪 Evaluations (opcional — dt-evals)\n\nRequer [`dt-evals`](https://github.com/dynatrace-oss/dt-evals) rodando. Ver [docs/07-evaluations.md](../docs/07-evaluations.md)."
+      "content": "### 🧩 Detalhe por modelo / ferramenta",
+      "title": ""
     },
-    "51": {
-      "type": "data",
-      "title": "Pass rate por métrica (24h)",
-      "query": "fetch bizevents, from:now()-24h\n| filter event.type == \"gen_ai.evaluation.result\"\n| summarize evaluations = count(),\n            pass_rate = countIf(gen_ai.evaluation.score.label == \"pass\") * 100.0 / count(),\n            avg_score = avg(gen_ai.evaluation.score.value),\n            by:{gen_ai.evaluation.name}\n| sort pass_rate asc",
-      "visualization": "table"
-    },
-
-    "99": {
+    "Claude_logo": {
       "type": "markdown",
+      "content": "![](https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/claude-color.png)",
+      "title": ""
+    },
+    "Claude_hdr": {
       "title": "",
-      "content": "---\n### 📖 Como esses dados chegam aqui\n1. Ferramenta de IA do dev (Copilot Chat, Claude Code, Cursor, agente custom...) emite spans OTel GenAI\n2. Spans vão via OTLP HTTP pro OTel Collector\n3. Collector autentica e forwarda pro Dynatrace\n4. Este dashboard consulta via DQL — mesmas queries do [notebook](../notebooks/copilot-chat-observability.md)"
+      "type": "data",
+      "query": "data record(a= \"Claude\")",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "recordLabel": "a",
+          "recordField": "a",
+          "isIconVisible": true,
+          "prefixIcon": "DescriptionIcon",
+          "colorThresholdTarget": "background"
+        },
+        "coloring": {
+          "colorRules": [
+            {
+              "value": "a",
+              "comparator": "!=",
+              "field": "a",
+              "colorMode": "custom-color",
+              "customColor": {
+                "Default": "#d56b1a"
+              }
+            }
+          ]
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Claude_cost": {
+      "title": "Custo (USD)",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "total",
+          "prefixIcon": "MoneyIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "total",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Claude_req": {
+      "title": "Requests",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Claude_tok": {
+      "title": "Tokens",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "tokens",
+          "prefixIcon": "DiskIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Claude_lat": {
+      "title": "Tempo médio resp.",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"claude\") or contains(gen_ai.request.model,\"opus\") or contains(gen_ai.request.model,\"sonnet\") or contains(gen_ai.request.model,\"haiku\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p90=percentile(duration,90)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "p90",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "p90",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "GPT_logo": {
+      "type": "markdown",
+      "content": "![](https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/openai.png)",
+      "title": ""
+    },
+    "GPT_hdr": {
+      "title": "",
+      "type": "data",
+      "query": "data record(a= \"GPT\")",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "recordLabel": "a",
+          "recordField": "a",
+          "isIconVisible": true,
+          "prefixIcon": "DescriptionIcon",
+          "colorThresholdTarget": "background"
+        },
+        "coloring": {
+          "colorRules": [
+            {
+              "value": "a",
+              "comparator": "!=",
+              "field": "a",
+              "colorMode": "custom-color",
+              "customColor": {
+                "Default": "#10a37f"
+              }
+            }
+          ]
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "GPT_cost": {
+      "title": "Custo (USD)",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "total",
+          "prefixIcon": "MoneyIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "total",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "GPT_req": {
+      "title": "Requests",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "GPT_tok": {
+      "title": "Tokens",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "tokens",
+          "prefixIcon": "DiskIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "GPT_lat": {
+      "title": "Tempo médio resp.",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gpt\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p90=percentile(duration,90)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "p90",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "p90",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Gemini_logo": {
+      "type": "markdown",
+      "content": "![](https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/gemini-color.png)",
+      "title": ""
+    },
+    "Gemini_hdr": {
+      "title": "",
+      "type": "data",
+      "query": "data record(a= \"Gemini\")",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "recordLabel": "a",
+          "recordField": "a",
+          "isIconVisible": true,
+          "prefixIcon": "DescriptionIcon",
+          "colorThresholdTarget": "background"
+        },
+        "coloring": {
+          "colorRules": [
+            {
+              "value": "a",
+              "comparator": "!=",
+              "field": "a",
+              "colorMode": "custom-color",
+              "customColor": {
+                "Default": "#4285f4"
+              }
+            }
+          ]
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Gemini_cost": {
+      "title": "Custo (USD)",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "total",
+          "prefixIcon": "MoneyIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "total",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Gemini_req": {
+      "title": "Requests",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Gemini_tok": {
+      "title": "Tokens",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "tokens",
+          "prefixIcon": "DiskIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Gemini_lat": {
+      "title": "Tempo médio resp.",
+      "type": "data",
+      "query": "fetch spans\n| filter contains(gen_ai.request.model,\"gemini\")\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p90=percentile(duration,90)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "p90",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "p90",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Copilot_logo": {
+      "type": "markdown",
+      "content": "![](https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/githubcopilot.png)",
+      "title": ""
+    },
+    "Copilot_hdr": {
+      "title": "",
+      "type": "data",
+      "query": "data record(a= \"Copilot\")",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "recordLabel": "a",
+          "recordField": "a",
+          "isIconVisible": true,
+          "prefixIcon": "DescriptionIcon",
+          "colorThresholdTarget": "background"
+        },
+        "coloring": {
+          "colorRules": [
+            {
+              "value": "a",
+              "comparator": "!=",
+              "field": "a",
+              "colorMode": "custom-color",
+              "customColor": {
+                "Default": "#6e40c9"
+              }
+            }
+          ]
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Copilot_cost": {
+      "title": "Custo (USD)",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| fieldsAdd inp=toDouble(gen_ai.usage.input_tokens), out=toDouble(gen_ai.usage.output_tokens)\n| fieldsAdd cost_usd=if(contains(gen_ai.request.model,\"opus\"),(inp*0.000015)+(out*0.000075),else:if(contains(gen_ai.request.model,\"sonnet\"),(inp*0.000003)+(out*0.000015),else:if(contains(gen_ai.request.model,\"haiku\"),(inp*0.0000008)+(out*0.000004),else:if(contains(gen_ai.request.model,\"mini\"),(inp*0.00000015)+(out*0.0000006),else:if(contains(gen_ai.request.model,\"gpt-4o\"),(inp*0.0000025)+(out*0.00001),else:if(contains(gen_ai.request.model,\"gemini\"),(inp*0.00000125)+(out*0.000005),else:(inp*0.000002)+(out*0.00001)))))))\n| summarize total=sum(cost_usd)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "total",
+          "prefixIcon": "MoneyIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "total",
+            "unitCategory": "currency",
+            "baseUnit": "usd",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": true,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Copilot_req": {
+      "title": "Requests",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize requests=count()",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "requests",
+          "prefixIcon": "CodeIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Copilot_tok": {
+      "title": "Tokens",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize tokens=sum(toLong(gen_ai.usage.input_tokens)+toLong(gen_ai.usage.output_tokens))",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "tokens",
+          "prefixIcon": "DiskIcon"
+        },
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
+    },
+    "Copilot_lat": {
+      "title": "Tempo médio resp.",
+      "type": "data",
+      "query": "fetch spans\n| filter gen_ai.provider.name==\"github\"\n| filter in(gen_ai.provider.name, $Provider)\n| filter in(gen_ai.request.model, $Modelo)\n| summarize p90=percentile(duration,90)",
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "singleValue": {
+          "labelMode": "none",
+          "isIconVisible": true,
+          "recordField": "p90",
+          "prefixIcon": "DurationIcon"
+        },
+        "autoSelectVisualization": false,
+        "unitsOverrides": [
+          {
+            "identifier": "p90",
+            "unitCategory": "time",
+            "baseUnit": "nanosecond",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "cascade": null,
+            "added": 1
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      },
+      "davis": {
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      }
     }
   },
   "layouts": {
-    "0":  { "x": 0,  "y": 0,  "w": 24, "h": 3 },
-    "10": { "x": 0,  "y": 3,  "w": 24, "h": 1 },
-    "11": { "x": 0,  "y": 4,  "w": 12, "h": 6 },
-    "12": { "x": 12, "y": 4,  "w": 12, "h": 6 },
-    "20": { "x": 0,  "y": 10, "w": 24, "h": 2 },
-    "21": { "x": 0,  "y": 12, "w": 24, "h": 6 },
-    "22": { "x": 0,  "y": 18, "w": 12, "h": 6 },
-    "23": { "x": 12, "y": 18, "w": 12, "h": 6 },
-    "30": { "x": 0,  "y": 24, "w": 24, "h": 2 },
-    "31": { "x": 0,  "y": 26, "w": 24, "h": 6 },
-    "40": { "x": 0,  "y": 32, "w": 24, "h": 2 },
-    "41": { "x": 0,  "y": 34, "w": 12, "h": 6 },
-    "42": { "x": 12, "y": 34, "w": 12, "h": 6 },
-    "43": { "x": 0,  "y": 40, "w": 12, "h": 6 },
-    "44": { "x": 12, "y": 40, "w": 12, "h": 6 },
-    "50": { "x": 0,  "y": 46, "w": 24, "h": 2 },
-    "51": { "x": 0,  "y": 48, "w": 24, "h": 6 },
-    "99": { "x": 0,  "y": 54, "w": 24, "h": 3 }
-  }
+    "0": {
+      "x": 0,
+      "y": 0,
+      "w": 24,
+      "h": 2
+    },
+    "10": {
+      "x": 0,
+      "y": 2,
+      "w": 24,
+      "h": 1
+    },
+    "11": {
+      "x": 0,
+      "y": 3,
+      "w": 5,
+      "h": 3
+    },
+    "12": {
+      "x": 5,
+      "y": 3,
+      "w": 5,
+      "h": 3
+    },
+    "13": {
+      "x": 10,
+      "y": 3,
+      "w": 5,
+      "h": 3
+    },
+    "14": {
+      "x": 15,
+      "y": 3,
+      "w": 5,
+      "h": 3
+    },
+    "15": {
+      "x": 20,
+      "y": 3,
+      "w": 4,
+      "h": 3
+    },
+    "20": {
+      "x": 0,
+      "y": 6,
+      "w": 24,
+      "h": 1
+    },
+    "21": {
+      "x": 0,
+      "y": 7,
+      "w": 12,
+      "h": 6
+    },
+    "22": {
+      "x": 12,
+      "y": 7,
+      "w": 12,
+      "h": 6
+    },
+    "23": {
+      "x": 0,
+      "y": 13,
+      "w": 12,
+      "h": 6
+    },
+    "24": {
+      "x": 12,
+      "y": 13,
+      "w": 12,
+      "h": 6
+    },
+    "30": {
+      "x": 0,
+      "y": 19,
+      "w": 24,
+      "h": 1
+    },
+    "31": {
+      "x": 0,
+      "y": 20,
+      "w": 12,
+      "h": 6
+    },
+    "32": {
+      "x": 12,
+      "y": 20,
+      "w": 12,
+      "h": 6
+    },
+    "40": {
+      "x": 0,
+      "y": 26,
+      "w": 24,
+      "h": 1
+    },
+    "41": {
+      "x": 0,
+      "y": 27,
+      "w": 8,
+      "h": 6
+    },
+    "42": {
+      "x": 8,
+      "y": 27,
+      "w": 8,
+      "h": 6
+    },
+    "43": {
+      "x": 16,
+      "y": 27,
+      "w": 8,
+      "h": 6
+    },
+    "50": {
+      "x": 0,
+      "y": 33,
+      "w": 24,
+      "h": 1
+    },
+    "Claude_logo": {
+      "x": 0,
+      "y": 34,
+      "w": 6,
+      "h": 3
+    },
+    "Claude_hdr": {
+      "x": 0,
+      "y": 37,
+      "w": 6,
+      "h": 2
+    },
+    "Claude_cost": {
+      "x": 0,
+      "y": 39,
+      "w": 6,
+      "h": 3
+    },
+    "Claude_req": {
+      "x": 0,
+      "y": 42,
+      "w": 6,
+      "h": 3
+    },
+    "Claude_tok": {
+      "x": 0,
+      "y": 45,
+      "w": 6,
+      "h": 3
+    },
+    "Claude_lat": {
+      "x": 0,
+      "y": 48,
+      "w": 6,
+      "h": 3
+    },
+    "GPT_logo": {
+      "x": 6,
+      "y": 34,
+      "w": 6,
+      "h": 3
+    },
+    "GPT_hdr": {
+      "x": 6,
+      "y": 37,
+      "w": 6,
+      "h": 2
+    },
+    "GPT_cost": {
+      "x": 6,
+      "y": 39,
+      "w": 6,
+      "h": 3
+    },
+    "GPT_req": {
+      "x": 6,
+      "y": 42,
+      "w": 6,
+      "h": 3
+    },
+    "GPT_tok": {
+      "x": 6,
+      "y": 45,
+      "w": 6,
+      "h": 3
+    },
+    "GPT_lat": {
+      "x": 6,
+      "y": 48,
+      "w": 6,
+      "h": 3
+    },
+    "Gemini_logo": {
+      "x": 12,
+      "y": 34,
+      "w": 6,
+      "h": 3
+    },
+    "Gemini_hdr": {
+      "x": 12,
+      "y": 37,
+      "w": 6,
+      "h": 2
+    },
+    "Gemini_cost": {
+      "x": 12,
+      "y": 39,
+      "w": 6,
+      "h": 3
+    },
+    "Gemini_req": {
+      "x": 12,
+      "y": 42,
+      "w": 6,
+      "h": 3
+    },
+    "Gemini_tok": {
+      "x": 12,
+      "y": 45,
+      "w": 6,
+      "h": 3
+    },
+    "Gemini_lat": {
+      "x": 12,
+      "y": 48,
+      "w": 6,
+      "h": 3
+    },
+    "Copilot_logo": {
+      "x": 18,
+      "y": 34,
+      "w": 6,
+      "h": 3
+    },
+    "Copilot_hdr": {
+      "x": 18,
+      "y": 37,
+      "w": 6,
+      "h": 2
+    },
+    "Copilot_cost": {
+      "x": 18,
+      "y": 39,
+      "w": 6,
+      "h": 3
+    },
+    "Copilot_req": {
+      "x": 18,
+      "y": 42,
+      "w": 6,
+      "h": 3
+    },
+    "Copilot_tok": {
+      "x": 18,
+      "y": 45,
+      "w": 6,
+      "h": 3
+    },
+    "Copilot_lat": {
+      "x": 18,
+      "y": 48,
+      "w": 6,
+      "h": 3
+    }
+  },
+  "importedWithCode": false,
+  "settings": {
+    "defaultTimeframe": {
+      "value": {
+        "from": "now()-7d",
+        "to": "now()"
+      },
+      "enabled": true
+    }
+  },
+  "annotations": []
 }
