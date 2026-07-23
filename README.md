@@ -20,6 +20,10 @@ Cobre os 4 pilares que o cliente solicitou:
 | **Bônus: conteúdo** | 🔒 Opt-in | Prompt + resposta + tool arguments (requer aprovação LGPD) |
 | **Bônus: qualidade** | 🧪 Opcional | LLM-as-judge sobre as respostas do Copilot via [dt-evals](https://github.com/dynatrace-oss/dt-evals) — ver [docs/07-evaluations.md](docs/07-evaluations.md) |
 
+Dashboard recomendado pra importar: [dashboards/developers-ai-usage.json](dashboards/developers-ai-usage.json)
+— visão geral única com os 5 pilares acima. `dashboards/copilot-chat-observability.json`
+continua disponível como versão anterior, por pilar.
+
 ## Como funciona
 
 ```mermaid
@@ -60,7 +64,8 @@ ia-observability-for-devs/
 │   ├── workspace-settings.example.jsonc  Por projeto (opt-in do time)
 │   └── managed-settings.example.json   Admin: coloca no .github-private ou MDM
 ├── dashboards/
-│   └── copilot-chat-observability.json  Dashboard Dynatrace pronto pra importar
+│   ├── developers-ai-usage.json      Dashboard consolidado "Developers AI Usage" (visão geral)
+│   └── copilot-chat-observability.json  Dashboard Dynatrace pronto pra importar (por pilar)
 ├── evals/                          dt-evals — LLM-as-judge sobre os spans do Copilot
 │   ├── package.json                 Scripts npm (doctor, configure, run, run:ci)
 │   ├── dt-eval.yaml.example         Config: métricas, judge provider, sampling
